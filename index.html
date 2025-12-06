@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorsite</title>
+    <!-- LINK CORRECT CSS -->
+    <link rel="stylesheet" href="beke.style.css">
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8K2B4D4SDT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-8K2B4D4SDT');
+</script>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <h1>Favorsite</h1>
+        <p>Discover and rank your favorite TV shows & movies</p>
+    </header>
+
+    <!-- SEARCH AREA -->
+    <div class="search-area">
+        <input type="text" id="searchInput" placeholder="Search for a show or movie...">
+        <select id="searchType">
+            <option value="series">Series</option>
+            <option value="movie">Movie</option>
+        </select>
+        <button id="searchBtn">Search</button>
+    </div>
+
+    <!-- SEARCH RESULTS -->
+    <section>
+        <h2>Search Results</h2>
+        <div id="resultsContainer" class="show-grid"></div>
+    </section>
+
+    <!-- PRELOADED SHOWS -->
+    <section>
+        <h2>Top Preloaded Shows</h2>
+        <div id="preloadContainer" class="show-grid"></div>
+    </section>
+
+    <!-- PRELOADED MOVIES -->
+    <section>
+        <h2>Top Preloaded Movies</h2>
+        <div id="preloadMoviesContainer" class="show-grid"></div>
+    </section>
+
+    <!-- FAVORITES -->
+    <section id="favoritesSection">
+        <h2>Your Favorites</h2>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="shows">Shows</button>
+            <button class="tab-btn" data-tab="movies">Movies</button>
+        </div>
+        <div id="favoritesContainer" class="favorites-grid"></div>
+    </section>
+
+    <!-- TASTE PROFILE -->
+    <section id="tasteProfileSection">
+        <h2>Your Taste Profile</h2>
+        <div id="tasteProfile">
+            <p>Calculate your taste based on IMDb ratings of your favorites.</p>
+            <button id="calculateTasteBtn">Calculate Taste</button>
+            <div id="tasteResult"></div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p style="text-align:center; padding:15px; color:#888;">Made by Bekalu Endale</p>
+    </footer>
+
+    <!-- LINK JS -->
+    <script src="f97a4fa5.js"></script>
+</body>
+</html>

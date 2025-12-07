@@ -1,84 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8760871530518772"
-     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Favorsite</title>
-    <!-- LINK CORRECT CSS -->
+    
+    <!-- Google Ads -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8760871530518772"
+     crossorigin="anonymous"></script>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8K2B4D4SDT"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-8K2B4D4SDT');
+    </script>
+    
+    <!-- LINK TO CSS FILE -->
     <link rel="stylesheet" href="beke.style.css">
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-8K2B4D4SDT"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-8K2B4D4SDT');
-</script>
+    
+    <!-- HTML2Canvas library for saving as image -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/48/movie.png">
+    
+    <style>
+        /* Additional inline styles for immediate loading */
+        .loading-placeholder {
+            text-align: center;
+            padding: 20px;
+            color: #00b894;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .modal-content {
+            background-color: #1f1f1f;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            color: white;
+        }
+        
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close-modal:hover {
+            color: white;
+        }
+        
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .share-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .share-btn.twitter { background-color: #1DA1F2; color: white; }
+        .share-btn.facebook { background-color: #4267B2; color: white; }
+        .share-btn.whatsapp { background-color: #25D366; color: white; }
+        .share-btn.copy { background-color: #6c5ce7; color: white; }
+        .share-btn:hover { transform: translateY(-2px); }
+        
+        #imagePreview {
+            max-width: 100%;
+            margin: 20px 0;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    <!-- MODAL FOR SHARE OPTIONS -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="color: #00b894; margin-top: 0;">Share Your Taste Profile</h2>
+            <div id="shareContent">
+                <!-- Generated content will appear here -->
+            </div>
+            <img id="imagePreview" alt="Preview">
+            <div class="share-buttons">
+                <button class="share-btn twitter" onclick="shareOnTwitter()">🐦 Twitter</button>
+                <button class="share-btn facebook" onclick="shareOnFacebook()">📘 Facebook</button>
+                <button class="share-btn whatsapp" onclick="shareOnWhatsApp()">💚 WhatsApp</button>
+                <button class="share-btn copy" onclick="copyShareText()">📋 Copy Text</button>
+                <button class="share-btn" onclick="saveAsImage()" style="background-color: #00b894;">💾 Save as Image</button>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header>
-        <h1>Favorsite</h1>
-        <p>Discover and rank your favorite TV shows & movies</p>
+        <h1>🎬 Favorsite</h1>
+        <p>Discover, rank, and track your favorite TV shows & movies</p>
     </header>
 
     <!-- SEARCH AREA -->
     <div class="search-area">
         <input type="text" id="searchInput" placeholder="Search for a show or movie...">
         <select id="searchType">
+            <option value="">All Types</option>
             <option value="series">Series</option>
             <option value="movie">Movie</option>
         </select>
-        <button id="searchBtn">Search</button>
+        <button id="searchBtn">🔍 Search</button>
+        <button id="clearFavoritesBtn" style="background-color: #ff6b6b; margin-left: 10px;">🗑️ Clear All</button>
     </div>
 
     <!-- SEARCH RESULTS -->
     <section>
         <h2>Search Results</h2>
-        <div id="resultsContainer" class="show-grid"></div>
+        <div id="resultsContainer" class="show-grid">
+            <p class="loading-placeholder">Search for shows or movies above</p>
+        </div>
     </section>
 
     <!-- PRELOADED SHOWS -->
     <section>
-        <h2>Top Preloaded Shows</h2>
-        <div id="preloadContainer" class="show-grid"></div>
+        <h2>🎭 Top TV Shows</h2>
+        <div id="preloadContainer" class="show-grid">
+            <p class="loading-placeholder">Loading TV shows...</p>
+        </div>
     </section>
 
     <!-- PRELOADED MOVIES -->
     <section>
-        <h2>Top Preloaded Movies</h2>
-        <div id="preloadMoviesContainer" class="show-grid"></div>
+        <h2>🎥 Top Movies</h2>
+        <div id="preloadMoviesContainer" class="show-grid">
+            <p class="loading-placeholder">Loading movies...</p>
+        </div>
     </section>
 
     <!-- FAVORITES -->
     <section id="favoritesSection">
-        <h2>Your Favorites</h2>
-        <div class="tabs">
-            <button class="tab-btn active" data-tab="shows">Shows</button>
-            <button class="tab-btn" data-tab="movies">Movies</button>
+        <h2>❤️ Your Favorites</h2>
+        
+        <!-- Stats Bar -->
+        <div id="favoritesStats" style="text-align: center; margin-bottom: 20px; color: #00b894; font-weight: bold;">
+            <span id="totalFavorites">0 items</span> • 
+            <span id="seriesCount">0 series</span> • 
+            <span id="moviesCount">0 movies</span>
         </div>
-        <div id="favoritesContainer" class="favorites-grid"></div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="all">All</button>
+            <button class="tab-btn" data-tab="series">TV Series</button>
+            <button class="tab-btn" data-tab="movie">Movies</button>
+            <button class="tab-btn" id="exportBtn" style="background-color: #6c5ce7;">📤 Export</button>
+        </div>
+        
+        <!-- Favorites Container -->
+        <div id="favoritesContainer" class="favorites-grid">
+            <p class="loading-placeholder">No favorites yet. Add some shows or movies!</p>
+        </div>
     </section>
 
     <!-- TASTE PROFILE -->
     <section id="tasteProfileSection">
-        <h2>Your Taste Profile</h2>
+        <h2>📊 Your Taste Profile</h2>
         <div id="tasteProfile">
-            <p>Calculate your taste based on IMDb ratings of your favorites.</p>
-            <button id="calculateTasteBtn">Calculate Taste</button>
-            <div id="tasteResult"></div>
+            <div class="taste-card">
+                <p>Your taste profile is calculated automatically based on your favorites.</p>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="calculateTasteBtn">🔄 Refresh Profile</button>
+                    <button id="shareTasteBtn" style="background-color: #6c5ce7;">📤 Share My Taste</button>
+                    <button id="saveImageBtn" style="background-color: #00b894;">💾 Save as Image</button>
+                </div>
+                <div id="tasteResult">
+                    <p>Add favorites to see your taste profile</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- FOOTER -->
     <footer>
-        <p style="text-align:center; padding:15px; color:#888;">Made by Bekalu Endale</p>
+        <p>
+            Made with ❤️ by Bekalu Endale<br>
+            <small>Powered by OMDb API • Data from IMDb</small>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+            TV Show and Movie data © IMDb
+        </p>
     </footer>
 
-    <!-- LINK JS -->
+    <!-- LINK TO JAVASCRIPT FILE -->
     <script src="f97a4fa5.js"></script>
+    
+    <!-- Initialize Ads -->
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
 </body>
 </html>

@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Favorsite</title>
-    
+    <title>Favorsite - Track Your Favorite Movies & TV Shows</title>
+
     <!-- Google Ads -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8760871530518772"
-     crossorigin="anonymous"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8760871530518772" crossorigin="anonymous"></script>
     
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8K2B4D4SDT"></script>
@@ -18,43 +17,781 @@
       gtag('config', 'G-8K2B4D4SDT');
     </script>
     
-    <!-- LINK TO CSS FILE -->
-    <link rel="stylesheet" href="beke.style.css">
-    
-    <!-- HTML2Canvas library for saving as image -->
+  
+     <!-- HTML2Canvas library for saving as image -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="https://img.icons8.com/color/48/movie.png">
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{}">
+    
     <style>
-        /* Additional inline styles for immediate loading */
-        .loading-placeholder {
-            text-align: center;
-            padding: 20px;
-            color: #00b894;
+        /* ===== BASE STYLES ===== */
+        :root {
+            --primary: #00b894;
+            --secondary: #6c5ce7;
+            --danger: #ff6b6b;
+            --warning: #ff9f1a;
+            --dark-bg: #121212;
+            --card-bg: #1f1f1f;
+            --card-hover: #2a2a2a;
         }
         
-        /* Modal styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            color: #f0f0f0;
+            line-height: 1.6;
+            padding-top: 80px;
+        }
+        
+        /* ===== NAVIGATION ===== */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 1000;
+            padding: 10px 0;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .nav-logo {
+            color: var(--primary);
+            font-size: 1.8rem;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: #b2bec3;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-btn:hover,
+        .nav-btn.active {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        /* ===== SECTIONS ===== */
+        section {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        /* ===== SEARCH AREA ===== */
+        .search-area {
+            display: flex;
+            gap: 10px;
+            max-width: 900px;
+            margin: 30px auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        #searchInput {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            background: var(--card-bg);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        #searchType, #searchBtn, #clearFavoritesBtn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        #searchType {
+            background: var(--card-bg);
+            color: white;
+        }
+        
+        #searchBtn {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        #clearFavoritesBtn {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* ===== SHOW CARDS ===== */
+        .show-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+        
+        .show-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .show-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            background: var(--card-hover);
+        }
+        
+        .show-card img {
+            width: 100%;
+            height: 225px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .show-card h3 {
+            font-size: 1rem;
+            margin: 10px 0;
+            color: white;
+            height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            
+            -webkit-box-orient: vertical;
+        }
+        
+        .show-card p {
+            color: #b2bec3;
+            font-size: 0.9rem;
+            margin: 5px 0;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .favBtn {
+            flex: 1;
+            padding: 10px;
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        .favBtn:hover {
+            background: #00a884;
+        }
+        
+        .saveImageBtn {
+            width: 40px;
+            height: 40px;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+        }
+        
+        .saveImageBtn:hover {
+            background: #8e44ad;
+        }
+        
+        /* ===== AFFILIATE LINKS IN CARDS ===== */
+        .affiliate-links {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .affiliate-links p {
+            color: #FFD700;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .affiliate-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 3px;
+            background: #FF9900;
+            color: #232F3E;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+        
+        .affiliate-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .affiliate-btn.trailer {
+            background: #FF0000;
+            color: white;
+        }
+        
+        .affiliate-btn.imdb {
+            background: #f5c518;
+            color: #000;
+        }
+        
+        /* ===== FAVORITES SECTION ===== */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: #333;
+            color: #b2bec3;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        .favorites-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .favorite-card {
+            display: flex;
+            gap: 20px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+        
+        .favorite-card img {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .favorite-details {
+            flex: 1;
+        }
+        
+        .rank {
+            background: var(--primary);
+            color: var(--dark-bg);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        /* ===== DECIMAL RATING STARS ===== */
+        .rating-container {
+            margin: 15px 0;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 2px;
+            margin: 10px 0;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .star-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            color: #555;
+            transition: color 0.3s;
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .star-btn .star-half {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            overflow: hidden;
+            color: #FFD700;
+        }
+        
+        .star-btn.filled {
+            color: #FFD700;
+        }
+        
+        .star-btn:hover {
+            color: #FFD700;
+        }
+        
+        .user-rating-display {
+            text-align: center;
+            color: #FFD700;
+            font-weight: bold;
+            margin: 10px 0;
+            font-size: 1.1rem;
+        }
+        
+        .decimal-rating-input {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .decimal-rating-input input {
+            width: 60px;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #1f1f1f;
+            color: white;
+            text-align: center;
+        }
+        
+        .decimal-rating-input button {
+            padding: 8px 12px;
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        /* ===== PERSONAL NOTES ===== */
+        .notes-section {
+            margin: 15px 0;
+        }
+        
+        .user-review {
+            background: rgba(0, 184, 148, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        
+        .add-notes-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+        
+        .add-notes-btn:hover {
+            background: #5b52d4;
+        }
+        
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .trailer-btn {
+            background: #FF0000;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            flex: 1;
+            min-width: 200px;
+            transition: background 0.3s;
+        }
+        
+        .trailer-btn:hover {
+            background: #e60000;
+        }
+        
+        .save-fav-image-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            min-width: 200px;
+            transition: background 0.3s;
+        }
+        
+        .save-fav-image-btn:hover {
+            background: #8e44ad;
+        }
+        
+        .rank-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .upBtn, .downBtn, .removeBtn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .upBtn {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        .downBtn {
+            background: var(--warning);
+            color: var(--dark-bg);
+        }
+        
+        .removeBtn {
+            background: var(--danger);
+            color: white;
+        }
+        
+        /* ===== CUSTOM LISTS ===== */
+        .lists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .custom-list-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .custom-list-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .list-header h3 {
+            color: white;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .list-count {
+            background: var(--secondary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .list-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .list-action-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .list-action-btn.save {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .list-action-btn.view {
+            background: var(--primary);
+            color: var(--dark-bg);
+        }
+        
+        .list-action-btn.delete {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .list-action-btn.add {
+            background: #f5c518;
+            color: #000;
+        }
+        
+        .list-action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* ===== LIST MANAGEMENT MODAL ===== */
+        .list-management-modal .modal-content {
+            max-width: 600px;
+        }
+        
+        .search-favorites-area {
+            margin: 20px 0;
+        }
+        
+        .search-favorites-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #333;
+            background: var(--card-bg);
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .favorites-search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .favorite-search-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--card-bg);
+            margin-bottom: 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        
+        .favorite-search-item:hover {
+            background: var(--card-hover);
+        }
+        
+        .favorite-search-item.selected {
+            background: rgba(0, 184, 148, 0.2);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .add-to-list-btn {
+            background: var(--primary);
+            color: var(--dark-bg);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .current-list-items {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        
+        .current-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        
+        .remove-from-list-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        /* ===== AFFILIATE SECTION ===== */
+        .affiliate-content {
+            display: none;
+        }
+        
+        .affiliate-content.active {
+            display: block;
+        }
+        
+        .affiliate-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .streaming-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .streaming-btn {
+            padding: 12px 20px;
+            background: var(--secondary);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .streaming-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* ===== MODALS ===== */
         .modal {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             left: 0;
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
         }
         
         .modal-content {
-            background-color: #1f1f1f;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 12px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
             width: 90%;
             max-width: 500px;
-            color: white;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         
         .close-modal {
@@ -69,40 +806,354 @@
             color: white;
         }
         
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .share-btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        .share-btn.twitter { background-color: #1DA1F2; color: white; }
-        .share-btn.facebook { background-color: #4267B2; color: white; }
-        .share-btn.whatsapp { background-color: #25D366; color: white; }
-        .share-btn.copy { background-color: #6c5ce7; color: white; }
-        .share-btn:hover { transform: translateY(-2px); }
-        
-        #imagePreview {
-            max-width: 100%;
-            margin: 20px 0;
+        .description-textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
             border-radius: 8px;
-            display: none;
+            border: 1px solid #444;
+            background: #1a1a1a;
+            color: white;
+            resize: vertical;
+            font-family: inherit;
+            margin: 15px 0;
+        }
+        
+        /* ===== LOADING PLACEHOLDERS & SKELETONS ===== */
+        .loading-placeholder {
+            text-align: center;
+            padding: 40px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            grid-column: 1 / -1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #b2bec3;
+            grid-column: 1 / -1;
+        }
+        
+        .loading-skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #333 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            border-top: 1px solid #333;
+            margin-top: 50px;
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .favorite-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .favorite-card img {
+                width: 150px;
+                height: 225px;
+                margin: 0 auto 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .trailer-btn, .save-fav-image-btn {
+                min-width: 100%;
+            }
+            
+            .nav-links {
+                justify-content: center;
+            }
+            
+            .nav-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .lists-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rating-stars {
+                gap: 1px;
+            }
+            
+            .star-btn {
+                font-size: 1.6rem;
+                width: 25px;
+                height: 25px;
+            }
+        }
+        
+        /* ===== ACCESSIBILITY ===== */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        :focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+            color: white;
+        }
+        
+        .toast.success {
+            background: #00b894;
+        }
+        
+        .toast.error {
+            background: #ff6b6b;
+        }
+        
+        .toast.info {
+            background: #6c5ce7;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
     </style>
 </head>
 <body>
-    <!-- MODAL FOR SHARE OPTIONS -->
+
+    <!-- TOP NAVIGATION -->
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="#home" class="nav-logo" aria-label="Favorsite Home">🎬 Favorsite</a>
+            <div class="nav-links">
+                <button class="nav-btn active" data-section="home" aria-label="Home section">🏠 Home</button>
+                <button class="nav-btn" data-section="search" aria-label="Search section">🔍 Search</button>
+                <button class="nav-btn" data-section="topShows" aria-label="Top TV Shows">🎭 Top Shows</button>
+                <button class="nav-btn" data-section="topMovies" aria-label="Top Movies">🎥 Top Movies</button>
+                <button class="nav-btn" data-section="favoritesSection" aria-label="Favorites section">❤️ Favorites</button>
+                <button class="nav-btn" data-section="affiliateSection" aria-label="Watch and Buy section">🛒 Watch/Buy</button>
+                <button class="nav-btn" data-section="customListsSection" aria-label="Custom Lists section">📋 Lists</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PERSONAL NOTES MODAL -->
+    <div id="descriptionModal" class="modal" role="dialog" aria-labelledby="notesModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeDescriptionModal()" aria-label="Close notes modal">&times;</span>
+            <h2 id="notesModalTitle" style="color:#00b894; margin-bottom: 10px;">✏️ Add Personal Notes</h2>
+            <p style="color:#aaa; margin-bottom: 20px;">Your thoughts, memories, or review — saved privately.</p>
+            
+            <textarea id="descriptionInput" class="description-textarea" 
+                      placeholder="What did you think? Why is it special? Any memorable scenes or quotes..."></textarea>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:20px;">
+                <button onclick="clearDescription()" 
+                        style="background:#ff6b6b; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                    Clear
+                </button>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="closeDescriptionModal()" 
+                            style="background:#666; color:white; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">
+                        Cancel
+                    </button>
+                    <button onclick="saveDescription()" 
+                            style="background:#00b894; color:#121212; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                        💾 Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECIMAL RATING MODAL -->
+    <div id="decimalRatingModal" class="modal" role="dialog" aria-labelledby="decimalRatingModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeDecimalRatingModal()" aria-label="Close rating modal">&times;</span>
+            <h2 id="decimalRatingModalTitle" style="color:#00b894; margin-bottom: 10px;">⭐ Set Decimal Rating</h2>
+            <p style="color:#aaa; margin-bottom: 20px;">Rate from 0.0 to 10.0 with one decimal place (e.g., 7.5)</p>
+            
+            <div style="text-align:center; margin-bottom:20px;">
+                <div id="currentRatingDisplay" style="font-size:3rem; color:#FFD700; font-weight:bold; margin-bottom:10px;">0.0</div>
+                <div id="ratingStarsPreview" style="font-size:2rem; color:#FFD700; margin-bottom:20px;"></div>
+            </div>
+            
+            <div class="decimal-rating-input">
+                <input type="number" id="decimalRatingInput" min="0" max="10" step="0.1" value="0.0" 
+                       style="flex:1; max-width:100px;">
+                <button onclick="saveDecimalRating()" 
+                        style="background:#00b894; color:#121212; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                    💾 Save Rating
+                </button>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="setQuickRating(0)" style="background:#666; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; flex:1;">0.0</button>
+                <button onclick="setQuickRating(5)" style="background:#666; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; flex:1;">5.0</button>
+                <button onclick="setQuickRating(7.5)" style="background:#666; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; flex:1;">7.5</button>
+                <button onclick="setQuickRating(10)" style="background:#666; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; flex:1;">10.0</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIST MANAGEMENT MODAL -->
+    <div id="listManagementModal" class="modal list-management-modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeListManagementModal()" aria-label="Close list management">&times;</span>
+            <h2 id="listManagementTitle" style="color:#00b894; margin-bottom: 10px;"></h2>
+            
+            <div style="margin-bottom:20px;">
+                <h3 style="color:#6c5ce7; margin-bottom:10px;">🔍 Search Your Favorites</h3>
+                <input type="text" id="searchFavoritesInput" class="search-favorites-input" 
+                       placeholder="Search your favorites to add to this list...">
+                <div id="favoritesSearchResults" class="favorites-search-results">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
+            
+            <div>
+                <h3 style="color:#00b894; margin-bottom:10px;">📋 Current List Items</h3>
+                <div id="currentListItems" class="current-list-items">
+                    <!-- Current list items will appear here -->
+                </div>
+            </div>
+            
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button onclick="saveListChanges()" style="background:#00b894; color:#121212; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                    💾 Save Changes
+                </button>
+                <button onclick="closeListManagementModal()" style="background:#666; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARE MODAL -->
+    <div id="shareModal" class="modal" role="dialog" aria-labelledby="shareModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeShareModal()" aria-label="Close share modal">&times;</span>
+            <h2 id="shareModalTitle" style="color:#00b894;">Share Your Taste Profile</h2>
+            <div id="shareContent"></div>
+            <img id="imagePreview" alt="Preview" style="max-width:100%; margin-top:20px; display:none;">
+            <div class="share-buttons" style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+                <button class="share-btn" onclick="shareOnTwitter()" style="background:#1DA1F2; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; flex:1;">🐦 Twitter</button>
+                <button class="share-btn" onclick="shareOnFacebook()" style="background:#4267B2; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; flex:1;">📘 Facebook</button>
+                <button class="share-btn" onclick="copyShareText()" style="background:#00b894; color:#121212; padding:10px; border:none; border-radius:6px; cursor:pointer; flex:1;">📋 Copy</button>
+                <button class="share-btn" onclick="saveCompleteFavoritesAsImage()" style="background:#6c5ce7; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; flex:1;">💾 Save Complete Image</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW LIST MODAL -->
+    <div id="viewListModal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeViewListModal()" aria-label="Close list view">&times;</span>
+            <h2 id="listModalTitle" style="color:#00b894; margin-bottom: 10px;"></h2>
+            <div id="listModalContent" style="max-height:400px; overflow-y:auto; margin:20px 0;">
+                <!-- List items will be displayed here -->
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+                <button onclick="saveListAsImageFromModal()" style="background:#9b59b6; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                    💾 Save as Image
+                </button>
+                <button onclick="closeViewListModal()" style="background:#666; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOME SECTION -->
+    <section id="home" class="active-section">
+        <header style="text-align:center; padding:40px 20px;">
+            <h1>🎬 Favorsite</h1>
+            <p style="color:#b2bec3; font-size:1.2rem; max-width:600px; margin:0 auto;">Discover, rank, track, and annotate your favorite TV shows & movies</p>
+        </header>
+    </section>
+
+    <!-- SEARCH SECTION -->
+    <section id="search" class="hidden-section">
+        <h2>🔍 Search Movies & TV Shows</h2>
+        <div class="search-area">
+            <input type="text" id="searchInput" placeholder="Search for a show or movie...">
+            <select id="searchType">
+                <option value="">All Types</option>
+                <option value="series">TV Series</option>
+                <option value="movie">Movies</option>
+            </select>
+            <button id="searchBtn">Search</button>
+            <button id="clearFavoritesBtn">🗑️ Clear All</button>
+        </div>
+
+        <div style="margin-top:30px;">
+            <h3>Search Results</h3>
+            <div id="resultsContainer" class="show-grid">
+                <p class="loading-placeholder">Search for shows or movies above</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOP SHOWS SECTION -->
+    <section id="topShows" class="hidden-section">
+        <h2>🎭 Top TV Shows</h2>
+        <div id="preloadContainer" class="show-grid">
+            <p class="loading-placeholder">Loading TV shows...</p>
+        </div>
+    </section>
+
+    <!-- TOP MOVIES SECTION -->
+    <section id="topMovies" class="hidden-section">
+        <h2>🎥 Top Movies</h2>
+        <div id="preloadMoviesContainer" class="show-grid">
+            <p class="loading-placeholder">Loading movies...</p>
+        </div>
+    </section><!-- MODAL FOR SHARE OPTIONS -->
     <div id="shareModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -121,74 +1172,2680 @@
         </div>
     </div>
 
-    <!-- HEADER -->
-    <header>
-        <h1>🎬 Favorsite</h1>
-        <p>Discover, rank, and track your favorite TV shows & movies</p>
-    </header>
 
-    <!-- SEARCH AREA -->
-    <div class="search-area">
-        <input type="text" id="searchInput" placeholder="Search for a show or movie...">
-        <select id="searchType">
-            <option value="">All Types</option>
-            <option value="series">Series</option>
-            <option value="movie">Movie</option>
-        </select>
-        <button id="searchBtn">🔍 Search</button>
-        <button id="clearFavoritesBtn" style="background-color: #ff6b6b; margin-left: 10px;">🗑️ Clear All</button>
-    </div>
-
-    <!-- SEARCH RESULTS -->
-    <section>
-        <h2>Search Results</h2>
-        <div id="resultsContainer" class="show-grid">
-            <p class="loading-placeholder">Search for shows or movies above</p>
-        </div>
-    </section>
-
-    <!-- PRELOADED SHOWS -->
-    <section>
-        <h2>🎭 Top TV Shows</h2>
-        <div id="preloadContainer" class="show-grid">
-            <p class="loading-placeholder">Loading TV shows...</p>
-        </div>
-    </section>
-
-    <!-- PRELOADED MOVIES -->
-    <section>
-        <h2>🎥 Top Movies</h2>
-        <div id="preloadMoviesContainer" class="show-grid">
-            <p class="loading-placeholder">Loading movies...</p>
-        </div>
-    </section>
-
-    <!-- FAVORITES -->
-    <section id="favoritesSection">
+    <!-- FAVORITES SECTION -->
+    <section id="favoritesSection" class="hidden-section">
         <h2>❤️ Your Favorites</h2>
-        
-        <!-- Stats Bar -->
-        <div id="favoritesStats" style="text-align: center; margin-bottom: 20px; color: #00b894; font-weight: bold;">
-            <span id="totalFavorites">0 items</span> • 
-            <span id="seriesCount">0 series</span> • 
-            <span id="moviesCount">0 movies</span>
+        <div id="favoritesStats" style="text-align:center; margin-bottom:20px; color:#00b894; font-weight:bold;">
+            <span id="totalFavorites">0 items</span> • <span id="seriesCount">0 series</span> • <span id="moviesCount">0 movies</span>
         </div>
-        
-        <!-- Tabs -->
         <div class="tabs">
             <button class="tab-btn active" data-tab="all">All</button>
             <button class="tab-btn" data-tab="series">TV Series</button>
             <button class="tab-btn" data-tab="movie">Movies</button>
-            <button class="tab-btn" id="exportBtn" style="background-color: #6c5ce7;">📤 Export</button>
+            <button id="exportBtn" style="background:#6c5ce7; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; margin-left:auto;">📤 Export</button>
         </div>
-        
-        <!-- Favorites Container -->
         <div id="favoritesContainer" class="favorites-grid">
-            <p class="loading-placeholder">No favorites yet. Add some shows or movies!</p>
+            <div class="empty-state">
+                <h3>🌟 No favorites yet!</h3>
+                <p>Add some shows or movies by clicking the "Add to Favorites" button.</p>
+                <p>Try adding from the "Top TV Shows" or "Top Movies" sections above.</p>
+            </div>
         </div>
     </section>
 
-    <!-- TASTE PROFILE -->
+    <!-- AFFILIATE SECTION -->
+    <section id="affiliateSection" class="hidden-section">
+        <h2>🛒 Where to Watch & Buy</h2>
+        <div class="affiliate-card">
+            <p style="color:#b2bec3; margin-bottom:25px;">Support Favorsite by using these links. Thank you! ❤️</p>
+            
+            <div class="tabs" style="margin-bottom:25px;">
+                <button class="tab-btn affiliate-tab active" data-affiliate="streaming">🎬 Streaming</button>
+                <button class="tab-btn affiliate-tab" data-affiliate="purchase">💿 Purchase</button>
+                <button class="tab-btn affiliate-tab" data-affiliate="trailers">🎥 Trailers</button>
+            </div>
+            
+            <!-- Streaming Services -->
+            <div id="streamingAffiliates" class="affiliate-content active">
+                <h3 style="color:#00b894; margin-bottom:15px;">Streaming Services</h3>
+                <div class="streaming-buttons">
+                    <a href="https://www.amazon.com/gp/video/offers/signup?tag=favorsite-20" target="_blank" rel="noopener sponsored" class="streaming-btn" style="background:linear-gradient(135deg,#00A8E1,#146eb4);">👑 Prime Video</a>
+                    <a href="https://www.netflix.com/" target="_blank" rel="noopener" class="streaming-btn" style="background:linear-gradient(135deg,#E50914,#B81D24);">🎬 Netflix</a>
+                    <a href="https://www.hulu.com/" target="_blank" rel="noopener" class="streaming-btn" style="background:linear-gradient(135deg,#1CE783,#0DBD5E);">📺 Hulu</a>
+                    <a href="https://www.disneyplus.com/" target="_blank" rel="noopener" class="streaming-btn" style="background:linear-gradient(135deg,#0063E5,#0F0F23);">✨ Disney+</a>
+                    <a href="https://tubitv.com/" target="_blank" rel="noopener" class="streaming-btn" style="background:#FF2D55;">📺 Tubi (Free)</a>
+                    <a href="https://pluto.tv/" target="_blank" rel="noopener" class="streaming-btn" style="background:#7824FF;">🪐 Pluto TV (Free)</a>
+                </div>
+            </div>
+            
+            <!-- Purchase -->
+            <div id="purchaseAffiliates" class="affiliate-content">
+                <h3 style="color:#00b894; margin-bottom:15px;">Buy Physical/Digital</h3>
+                <div class="streaming-buttons">
+                    <a href="https://www.amazon.com/s?k=blu-ray&tag=favorsite-20" target="_blank" rel="noopener sponsored" class="streaming-btn" style="background:#FF9900; color:#232F3E;">📦 Blu-ray</a>
+                    <a href="https://www.amazon.com/s?k=4k+uhd&tag=favorsite-20" target="_blank" rel="noopener sponsored" class="streaming-btn" style="background:#9b59b6; color:white;">🌟 4K UHD</a>
+                    <a href="https://www.amazon.com/s?k=digital+movie&tag=favorsite-20" target="_blank" rel="noopener sponsored" class="streaming-btn" style="background:#00b894; color:#121212;">💿 Digital</a>
+                    <a href="https://www.vudu.com/" target="_blank" rel="noopener" class="streaming-btn" style="background:#F5C518; color:#000;">🎬 Vudu</a>
+                </div>
+            </div>
+            
+            <!-- Trailers -->
+            <div id="trailersAffiliates" class="affiliate-content">
+                <h3 style="color:#00b894; margin-bottom:15px;">🎥 Watch Trailers</h3>
+                <p style="color:#b2bec3; margin-bottom:15px;">Search for official trailers on YouTube:</p>
+                <div id="trailerSearch" style="display:flex; gap:10px; margin-bottom:20px;">
+                    <input type="text" id="trailerSearchInput" placeholder="Enter movie/show name..." style="flex:1; padding:12px; border-radius:8px; border:2px solid #333; background:#1f1f1f; color:white;">
+                    <button id="searchTrailerBtn" style="background:#FF0000; color:white; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Search Trailer</button>
+                </div>
+                <div id="trailerResults" style="color:#b2bec3; text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:8px;">
+                    Search for a movie or show to find its trailer
+                </div>
+            </div>
+            
+            <div style="margin-top:25px; padding:15px; background:rgba(0,184,148,0.1); border-radius:8px; border-left:4px solid #00b894;">
+                <small style="color:#888;">
+                    💰 <strong>Support us:</strong> Using Amazon links earns us commission at no extra cost to you. Thank you for supporting Favorsite!
+                </small>
+            </div>
+        </div>
+    </section>
+
+    <!-- CUSTOM LISTS SECTION -->
+    <section id="customListsSection" class="hidden-section">
+        <h2>📋 Custom Lists</h2>
+        <div class="affiliate-card">
+            <p style="color:#b2bec3; margin-bottom:20px;">Create custom lists to organize your favorites by mood, genre, or any category!</p>
+            <div class="search-area" style="margin:20px 0;">
+                <input type="text" id="newListName" placeholder="Enter list name (e.g., 'Sci-Fi Classics')" style="flex:1;">
+                <button id="createListBtn" style="background:#00b894; color:#121212; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📝 Create List</button>
+                <button id="bulkExportBtn" style="background:#9b59b6; color:white; padding:12px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📤 Bulk Export</button>
+            </div>
+            <div id="customListsContainer" class="lists-grid">
+                <div class="empty-state" style="grid-column:1/-1;">
+                    <h3>📁 No custom lists yet!</h3>
+                    <p>Create your first list above.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>Made by Bekalu Endale</p>
+        <p><small>Powered by OMDb API • Data from IMDb</small></p>
+        <p><small>💰 As an Amazon Associate we earn from qualifying purchases.</small></p>
+    </footer>
+
+    <script>
+        // =============================
+        // 🔑 CONSTANTS & STORAGE KEYS
+        // =============================
+        const STORAGE_KEYS = {
+            FAVORITES: 'favorites',
+            CUSTOM_LISTS: 'customLists',
+            SETTINGS: 'settings'
+        };
+
+        const API_KEY = "f97a4fa5";
+        let currentEditingId = null;
+        let appInitialized = false;
+        let currentListId = null;
+        let searchTimeout = null;
+        let currentRatingId = null;
+
+        // Custom lists storage
+        let customLists = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_LISTS)) || [];
+
+        // Preloaded shows and movies
+        const preloadShowIDs = [
+            {id: "tt0903747", title: "Breaking Bad", year: "2008-2013", rating: "9.5"},
+            {id: "tt0944947", title: "Game of Thrones", year: "2011-2019", rating: "9.2"},
+            {id: "tt4574334", title: "Stranger Things", year: "2016-", rating: "8.7"},
+            {id: "tt1475582", title: "Sherlock", year: "2010-2017", rating: "9.1"},
+            {id: "tt7366338", title: "Chernobyl", year: "2019", rating: "9.4"},
+            {id: "tt0306414", title: "The Wire", year: "2002-2008", rating: "9.3"},
+            {id: "tt0417299", title: "Avatar: The Last Airbender", year: "2005-2008", rating: "9.3"},
+            {id: "tt1844624", title: "American Horror Story", year: "2011-", rating: "8.0"},
+            {id: "tt0386676", title: "The Office (US)", year: "2005-2013", rating: "9.0"},
+            {id: "tt0098904", title: "Seinfeld", year: "1989-1998", rating: "8.9"}
+        ];
+
+        const preloadMovieIDs = [
+            {id: "tt0111161", title: "The Shawshank Redemption", year: "1994", rating: "9.3"},
+            {id: "tt0068646", title: "The Godfather", year: "1972", rating: "9.2"},
+            {id: "tt0071562", title: "The Godfather Part II", year: "1974", rating: "9.0"},
+            {id: "tt0468569", title: "The Dark Knight", year: "2008", rating: "9.0"},
+            {id: "tt0050083", title: "12 Angry Men", year: "1957", rating: "9.0"},
+            {id: "tt0108052", title: "Schindler's List", year: "1993", rating: "9.0"},
+            {id: "tt0167260", title: "The Lord of the Rings: The Return of the King", year: "2003", rating: "9.0"},
+            {id: "tt0110912", title: "Pulp Fiction", year: "1994", rating: "8.9"},
+            {id: "tt0060196", title: "The Good, the Bad and the Ugly", year: "1966", rating: "8.8"},
+            {id: "tt0137523", title: "Fight Club", year: "1999", rating: "8.8"}
+        ];
+
+        // Fallback images
+        const FALLBACK_POSTERS = {
+            series: "https://images.unsplash.com/photo-1616530940355-351fabd9524b?w=150&h=225&fit=crop",
+            movie: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=150&h=225&fit=crop"
+        };
+
+        // =============================
+        // 🛠️ UTILITY FUNCTIONS
+        // =============================
+
+        /**
+         * Sanitizes HTML to prevent XSS attacks
+         * @param {string} str - String to sanitize
+         * @returns {string} Sanitized string
+         */
+        function sanitizeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        /**
+         * Shows a toast notification
+         * @param {string} message - Message to display
+         * @param {string} type - Type of notification (success, error, info)
+         */
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        /**
+         * Generates IMDb URL for a given IMDb ID
+         * @param {string} imdbId - IMDb ID
+         * @returns {string} IMDb URL
+         */
+        function getImdbUrl(imdbId) {
+            return `https://www.imdb.com/title/${imdbId}/`;
+        }
+
+        /**
+         * Creates star rating HTML with decimal support
+         * @param {number} rating - Rating value (0-10)
+         * @param {string} itemId - Item ID for data attribute
+         * @returns {string} HTML string for star rating
+         */
+        function createDecimalStarRating(rating, itemId) {
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.25 && rating % 1 < 0.75;
+            const almostFull = rating % 1 >= 0.75;
+            const almostEmpty = rating % 1 > 0 && rating % 1 < 0.25;
+            
+            let starsHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
+                if (i <= fullStars) {
+                    starsHTML += `<button class="star-btn filled" data-value="${i}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i})" aria-label="Rate ${i} out of 10 stars">★</button>`;
+                } else if (i === fullStars + 1) {
+                    if (halfStar) {
+                        starsHTML += `<button class="star-btn" data-value="${i-0.5}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i-0.5})" aria-label="Rate ${i-0.5} out of 10 stars">
+                            <span class="star-half">★</span>★
+                        </button>`;
+                    } else if (almostFull) {
+                        starsHTML += `<button class="star-btn filled" data-value="${i}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i})" aria-label="Rate ${i} out of 10 stars">★</button>`;
+                    } else if (almostEmpty) {
+                        starsHTML += `<button class="star-btn" data-value="${i-1}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i-1})" aria-label="Rate ${i-1} out of 10 stars">★</button>`;
+                    } else {
+                        starsHTML += `<button class="star-btn" data-value="${i}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i})" aria-label="Rate ${i} out of 10 stars">★</button>`;
+                    }
+                } else {
+                    starsHTML += `<button class="star-btn" data-value="${i}" data-id="${itemId}" onclick="setDecimalRating('${itemId}', ${i})" aria-label="Rate ${i} out of 10 stars">★</button>`;
+                }
+            }
+            
+            return starsHTML;
+        }
+
+        /**
+         * Renders star rating preview
+         * @param {number} rating - Rating value
+         * @returns {string} Star preview HTML
+         */
+        function renderStarPreview(rating) {
+            const fullStars = Math.floor(rating);
+            const halfStar = rating % 1 >= 0.25 && rating % 1 < 0.75;
+            const almostFull = rating % 1 >= 0.75;
+            
+            let stars = '';
+            for (let i = 1; i <= 10; i++) {
+                if (i <= fullStars) {
+                    stars += '★';
+                } else if (i === fullStars + 1) {
+                    if (halfStar) {
+                        stars += '⯨';
+                    } else if (almostFull) {
+                        stars += '★';
+                    } else {
+                        stars += '☆';
+                    }
+                } else {
+                    stars += '☆';
+                }
+            }
+            return stars;
+        }
+
+        // =============================
+        // 🎬 CORE FUNCTIONS
+        // =============================
+
+        function initializeFavorites() {
+            if (typeof localStorage === 'undefined') {
+                console.error("localStorage is not available!");
+                return [];
+            }
+            
+            let favorites = localStorage.getItem(STORAGE_KEYS.FAVORITES);
+            
+            if (!favorites) {
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify([]));
+                return [];
+            }
+            
+            try {
+                return JSON.parse(favorites) || [];
+            } catch (error) {
+                console.error("Error parsing favorites:", error);
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify([]));
+                return [];
+            }
+        }
+
+        // Display card with NO DUPLICATES
+        function displayCard(data, containerID, isFallback = false, forceShow = false) {
+            const container = document.getElementById(containerID);
+            if (!container) return;
+
+            // Check for duplicates by ID
+            const existingCard = container.querySelector(`.show-card .favBtn[data-id="${data.imdbID || data.id}"]`);
+            if (existingCard && !forceShow) {
+                console.log(`Duplicate found: ${data.Title || data.title}, skipping...`);
+                return;
+            }
+
+            const card = document.createElement("div");
+            card.classList.add("show-card");
+
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const isFav = favorites.some(fav => fav.imdbID === (data.imdbID || data.id));
+
+            let poster;
+            if (isFallback) {
+                poster = data.poster || (data.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+            } else {
+                poster = data.Poster && data.Poster !== "N/A" 
+                    ? data.Poster 
+                    : (data.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+            }
+
+            const itemId = data.imdbID || data.id;
+            const title = sanitizeHTML(data.Title || data.title);
+            const type = data.Type || (containerID.includes('series') ? 'series' : 'movie');
+            
+            // Generate URLs
+            const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + " official trailer")}`;
+            const imdbUrl = getImdbUrl(itemId);
+            
+            card.innerHTML = `
+                <img src="${poster}" 
+                     alt="${title} Poster" 
+                     loading="lazy"
+                     onerror="this.src='${type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                <h3>${title}</h3>
+                <p>⭐ IMDb: ${data.imdbRating || data.rating || "N/A"}</p>
+                <p>${data.Year || data.year}</p>
+                <p style="font-size: 0.8rem; color: #888;">${type === "movie" ? "Movie" : "TV Series"}</p>
+                
+                <div class="card-actions">
+                    <button class="favBtn" data-id="${itemId}" data-type="${type}" aria-label="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+                        ${isFav ? "❤️ Remove" : "🤍 Add"}
+                    </button>
+                    <button class="saveImageBtn" data-id="${itemId}" data-title="${title}" data-type="${type}" onclick="saveItemAsImage('${itemId}')" aria-label="Save as image">
+                        💾
+                    </button>
+                </div>
+                
+                <!-- Affiliate Links -->
+                <div class="affiliate-links">
+                    <p>🛒 Watch/Buy:</p>
+                    <a href="${imdbUrl}" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="affiliate-btn imdb">
+                        IMDb
+                    </a>
+                    <a href="https://www.amazon.com/s?k=${encodeURIComponent(title)}&tag=favorsite-20" 
+                       target="_blank" 
+                       rel="noopener sponsored" 
+                       class="affiliate-btn amazon">
+                        Amazon
+                    </a>
+                    <a href="${trailerUrl}" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="affiliate-btn trailer">
+                        ▶️ Trailer
+                    </a>
+                </div>
+            `;
+
+            container.appendChild(card);
+        }
+
+        // Preload content
+        async function preloadContent(type) {
+            const containerID = type === 'series' ? 'preloadContainer' : 'preloadMoviesContainer';
+            const items = type === 'series' ? preloadShowIDs : preloadMovieIDs;
+            const container = document.getElementById(containerID);
+            
+            if (!container) return;
+            
+            container.innerHTML = `<p class='loading-placeholder'>Loading ${type === 'series' ? 'TV shows' : 'movies'}...</p>`;
+            
+            for (let item of items) {
+                try {
+                    const response = await fetch(`https://www.omdbapi.com/?i=${item.id}&apikey=${API_KEY}`);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                    
+                    const data = await response.json();
+                    if (data.Response === "True") {
+                        data.Type = type === 'series' ? "series" : "movie";
+                        displayCard(data, containerID);
+                    }
+                } catch (error) {
+                    console.error(`Error loading ${item.id}:`, error);
+                    displayCard({
+                        imdbID: item.id,
+                        Title: item.title,
+                        Year: item.year,
+                        imdbRating: item.rating,
+                        Type: type === 'series' ? "series" : "movie",
+                        poster: type === 'series' ? FALLBACK_POSTERS.series : FALLBACK_POSTERS.movie
+                    }, containerID, true);
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        // Search function
+        async function searchContent() {
+            const query = document.getElementById("searchInput").value.trim();
+            const type = document.getElementById("searchType").value;
+            const container = document.getElementById("resultsContainer");
+            
+            if (!container) return;
+            
+            container.innerHTML = "<p class='loading-placeholder'>Searching...</p>";
+            
+            if (!query) {
+                container.innerHTML = "<p class='loading-placeholder'>Enter a search term</p>";
+                return;
+            }
+            
+            try {
+                const url = `https://www.omdbapi.com/?s=${encodeURIComponent(query)}${type ? `&type=${type}` : ''}&apikey=${API_KEY}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                
+                const data = await response.json();
+                container.innerHTML = "";
+                
+                if (data.Response === "True" && data.Search) {
+                    const limitedResults = data.Search.slice(0, 6);
+                    
+                    if (limitedResults.length === 0) {
+                        container.innerHTML = "<p class='loading-placeholder'>No results found</p>";
+                        return;
+                    }
+                    
+                    for (let item of limitedResults) {
+                        try {
+                            const detailResponse = await fetch(`https://www.omdbapi.com/?i=${item.imdbID}&apikey=${API_KEY}`);
+                            const detailData = await detailResponse.json();
+                            if (detailData.Response === "True") {
+                                displayCard(detailData, "resultsContainer", false, true);
+                            }
+                        } catch (error) {
+                            console.error("Error loading details:", error);
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                } else {
+                    container.innerHTML = "<p class='loading-placeholder'>No results found. Try another search.</p>";
+                }
+            } catch (error) {
+                console.error("Search error:", error);
+                container.innerHTML = `<div style="text-align: center; padding: 40px;">
+                    <p style="color: #ff6b6b;">Search failed. API might be unavailable.</p>
+                    <p style="color: #888;">Try searching for: "Breaking Bad", "The Dark Knight", "Game of Thrones"</p>
+                </div>`;
+            }
+        }
+
+        // Render favorites with decimal star ratings and notes
+        function renderFavorites(tab = "all") {
+            const container = document.getElementById("favoritesContainer");
+            if (!container) return;
+            
+            let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            container.innerHTML = "";
+            
+            if (favorites.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🌟 No favorites yet!</h3>
+                        <p>Add some shows or movies by clicking the "Add to Favorites" button.</p>
+                        <p>Try adding from the "Top TV Shows" or "Top Movies" sections above.</p>
+                    </div>
+                `;
+                updateFavoritesStats();
+                return;
+            }
+            
+            // Filter by tab
+            let filteredFavorites = favorites;
+            if (tab !== "all") {
+                filteredFavorites = favorites.filter(fav => {
+                    const favType = fav.Type ? fav.Type.toLowerCase() : '';
+                    return favType === tab;
+                });
+            }
+            
+            // Sort by rank
+            filteredFavorites.sort((a, b) => (a.rank || 999) - (b.rank || 999));
+            
+            // Update ranks
+            filteredFavorites.forEach((item, index) => {
+                item.rank = index + 1;
+            });
+            
+            // Update original favorites array with new ranks
+            favorites.forEach(fav => {
+                const updated = filteredFavorites.find(f => f.imdbID === fav.imdbID);
+                if (updated) {
+                    fav.rank = updated.rank;
+                }
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+            
+            // Display favorites
+            filteredFavorites.forEach((item) => {
+                const card = document.createElement("div");
+                card.classList.add("favorite-card");
+                
+                const poster = item.Poster && item.Poster !== "N/A" 
+                    ? item.Poster 
+                    : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+                
+                // Generate decimal star rating HTML
+                const rating = item.userRating || 0;
+                const starsHTML = createDecimalStarRating(rating, item.imdbID);
+                
+                // Generate URLs
+                const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(item.Title + " official trailer")}`;
+                const imdbUrl = getImdbUrl(item.imdbID);
+                
+                const safeNote = item.userNote ? sanitizeHTML(item.userNote).replace(/\n/g, '<br>') : '';
+                
+                card.innerHTML = `
+                    <img src="${poster}" 
+                         alt="${sanitizeHTML(item.Title)} Poster" 
+                         loading="lazy"
+                         onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                    <div class="favorite-details">
+                        <h3>${sanitizeHTML(item.Title)} <span class="rank">#${item.rank}</span></h3>
+                        <p>⭐ IMDb: ${item.imdbRating || "N/A"}</p>
+                        <p>${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}</p>
+                        
+                        <!-- Decimal Star Rating -->
+                        <div class="rating-container">
+                            <div class="rating-stars" data-id="${item.imdbID}">
+                                ${starsHTML}
+                            </div>
+                            <div class="user-rating-display">
+                                ${rating ? `Your Rating: ${rating.toFixed(1)}/10` : 'Click stars to rate'}
+                            </div>
+                            <button onclick="openDecimalRatingModal('${item.imdbID}')" 
+                                    style="background:transparent; color:#00b894; border:1px solid #00b894; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:0.9rem; margin-top:5px;">
+                                ⭐ Set Decimal Rating
+                            </button>
+                        </div>
+                        
+                        <!-- Personal Notes -->
+                        <div class="notes-section">
+                            ${item.userNote ? `
+                                <div class="user-review">
+                                    <strong>📝 Your Notes:</strong><br>
+                                    ${safeNote}
+                                </div>
+                            ` : ''}
+                            <button class="add-notes-btn" onclick="openNotesModal('${item.imdbID}')" aria-label="${item.userNote ? 'Edit personal notes' : 'Add personal notes'}">
+                                ${item.userNote ? '✏️ Edit Notes' : '📝 Add Personal Notes'}
+                            </button>
+                        </div>
+                        
+                        <p class="plot">${sanitizeHTML(item.Plot || "No description available")}</p>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <a href="${imdbUrl}" target="_blank" class="trailer-btn" style="background:#f5c518; color:#000;" aria-label="View on IMDb">
+                                🎬 IMDb Page
+                            </a>
+                            <a href="${trailerUrl}" target="_blank" class="trailer-btn" aria-label="Watch trailer on YouTube">
+                                🎥 Watch Trailer
+                            </a>
+                            <button class="save-fav-image-btn" onclick="saveFavoriteAsImage('${item.imdbID}')" aria-label="Save favorite as image">
+                                💾 Save as Image
+                            </button>
+                        </div>
+                        
+                        <div class="rank-buttons">
+                            <button class="upBtn" data-id="${item.imdbID}" title="Move up" aria-label="Move item up in ranking">▲ Up</button>
+                            <button class="downBtn" data-id="${item.imdbID}" title="Move down" aria-label="Move item down in ranking">▼ Down</button>
+                            <button class="removeBtn" data-id="${item.imdbID}" aria-label="Remove from favorites">Remove</button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            updateFavoritesStats();
+        }
+
+        // =============================
+        // ⭐ DECIMAL RATING FUNCTIONS
+        // =============================
+
+        function openDecimalRatingModal(itemId) {
+            currentRatingId = itemId;
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const item = favorites.find(f => f.imdbID === itemId);
+            const currentRating = item?.userRating || 0;
+            
+            document.getElementById('decimalRatingInput').value = currentRating.toFixed(1);
+            document.getElementById('currentRatingDisplay').textContent = currentRating.toFixed(1);
+            document.getElementById('ratingStarsPreview').textContent = renderStarPreview(currentRating);
+            
+            document.getElementById('decimalRatingModal').classList.add('active');
+        }
+
+        function closeDecimalRatingModal() {
+            document.getElementById('decimalRatingModal').classList.remove('active');
+            currentRatingId = null;
+        }
+
+        function setQuickRating(rating) {
+            document.getElementById('decimalRatingInput').value = rating.toFixed(1);
+            updateRatingPreview(rating);
+        }
+
+        function updateRatingPreview(rating) {
+            const ratingValue = parseFloat(rating) || 0;
+            document.getElementById('currentRatingDisplay').textContent = ratingValue.toFixed(1);
+            document.getElementById('ratingStarsPreview').textContent = renderStarPreview(ratingValue);
+        }
+
+        function saveDecimalRating() {
+            if (!currentRatingId) return;
+            
+            const ratingInput = document.getElementById('decimalRatingInput');
+            let ratingValue = parseFloat(ratingInput.value);
+            
+            // Validate rating
+            if (isNaN(ratingValue)) {
+                showToast('Please enter a valid number', 'error');
+                return;
+            }
+            
+            ratingValue = Math.max(0, Math.min(10, ratingValue));
+            
+            let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const itemIndex = favorites.findIndex(f => f.imdbID === currentRatingId);
+            
+            if (itemIndex !== -1) {
+                favorites[itemIndex].userRating = ratingValue;
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                
+                // Get current active tab
+                const currentTab = document.querySelector(".tab-btn.active[data-tab]");
+                const currentTabValue = currentTab ? currentTab.getAttribute("data-tab") : "all";
+                renderFavorites(currentTabValue);
+                
+                closeDecimalRatingModal();
+                showToast(`Rating saved: ${ratingValue.toFixed(1)}/10`, 'success');
+            }
+        }
+
+        function setDecimalRating(itemId, rating) {
+            let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const itemIndex = favorites.findIndex(f => f.imdbID === itemId);
+            
+            if (itemIndex !== -1) {
+                favorites[itemIndex].userRating = rating;
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                
+                // Get current active tab
+                const currentTab = document.querySelector(".tab-btn.active[data-tab]");
+                const currentTabValue = currentTab ? currentTab.getAttribute("data-tab") : "all";
+                renderFavorites(currentTabValue);
+                
+                showToast(`Rated ${rating.toFixed(1)}/10`, 'success');
+            }
+        }
+
+        // =============================
+        // 📋 CUSTOM LISTS FUNCTIONS
+        // =============================
+
+        function createCustomList() {
+            const listName = document.getElementById('newListName').value.trim();
+            if (!listName) {
+                showToast('Please enter a list name!', 'error');
+                return;
+            }
+            
+            // Check for duplicate list names
+            if (customLists.some(list => list.name.toLowerCase() === listName.toLowerCase())) {
+                showToast('A list with this name already exists!', 'error');
+                return;
+            }
+            
+            const newList = {
+                id: 'list_' + Date.now(),
+                name: listName,
+                items: [],
+                created: new Date().toISOString(),
+                lastModified: new Date().toISOString()
+            };
+            
+            customLists.push(newList);
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_LISTS, JSON.stringify(customLists));
+            
+            document.getElementById('newListName').value = '';
+            renderCustomLists();
+            showToast(`List "${listName}" created!`, 'success');
+        }
+
+        function renderCustomLists() {
+            const container = document.getElementById('customListsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (customLists.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1;">
+                        <h3>📁 No custom lists yet!</h3>
+                        <p>Create your first list above.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            customLists.forEach(list => {
+                const listCard = document.createElement('div');
+                listCard.className = 'custom-list-card';
+                listCard.dataset.listId = list.id;
+                
+                listCard.innerHTML = `
+                    <div class="list-header">
+                        <h3>${sanitizeHTML(list.name)}</h3>
+                        <span class="list-count">${list.items.length} items</span>
+                    </div>
+                    
+                    <div style="color:#b2bec3; margin-bottom:15px; font-size:0.9rem;">
+                        Created: ${new Date(list.created).toLocaleDateString()}
+                    </div>
+                    
+                    ${list.items.length > 0 ? `
+                        <div style="color:#b2bec3; margin-bottom:15px; font-size:0.9rem;">
+                            <strong>Recent Items:</strong>
+                            <div style="margin-top:5px;">
+                                ${(() => {
+                                    const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+                                    const recentItems = list.items.slice(-3).map(itemId => {
+                                        const item = favorites.find(f => f.imdbID === itemId);
+                                        return item ? sanitizeHTML(item.Title.substring(0, 20)) + (item.Title.length > 20 ? '...' : '') : 'Unknown';
+                                    }).filter(Boolean);
+                                    return recentItems.join(', ') || 'No items';
+                                })()}
+                            </div>
+                        </div>
+                    ` : `
+                        <div style="color:#888; margin-bottom:15px; font-style:italic; text-align:center; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                            No items in this list yet
+                        </div>
+                    `}
+                    
+                    <div class="list-actions">
+                        <button class="list-action-btn view" onclick="viewList('${list.id}')" aria-label="View list">
+                            👁️ View
+                        </button>
+                        <button class="list-action-btn add" onclick="openListManagement('${list.id}')" aria-label="Manage list items">
+                            ➕ Manage
+                        </button>
+                        <button class="list-action-btn save" onclick="saveListAsImage('${list.id}')" aria-label="Save list as image">
+                            💾 Save
+                        </button>
+                        <button class="list-action-btn delete" onclick="deleteList('${list.id}')" aria-label="Delete list">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(listCard);
+            });
+        }
+
+        // Open list management modal
+        function openListManagement(listId) {
+            const list = customLists.find(l => l.id === listId);
+            if (!list) {
+                showToast('List not found!', 'error');
+                return;
+            }
+            
+            currentListId = listId;
+            document.getElementById('listManagementTitle').textContent = `Manage: ${list.name}`;
+            
+            // Render current list items
+            renderCurrentListItems();
+            
+            // Setup search functionality
+            setupFavoritesSearch();
+            
+            document.getElementById('listManagementModal').classList.add('active');
+        }
+
+        function closeListManagementModal() {
+            document.getElementById('listManagementModal').classList.remove('active');
+            currentListId = null;
+            document.getElementById('searchFavoritesInput').value = '';
+            document.getElementById('favoritesSearchResults').innerHTML = '';
+        }
+
+        function setupFavoritesSearch() {
+            const searchInput = document.getElementById('searchFavoritesInput');
+            searchInput.value = '';
+            searchInput.addEventListener('input', debounce(searchFavorites, 300));
+            searchFavorites(); // Show all favorites initially
+        }
+
+        function searchFavorites() {
+            const searchTerm = document.getElementById('searchFavoritesInput').value.toLowerCase().trim();
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const list = customLists.find(l => l.id === currentListId);
+            const currentItems = list ? list.items : [];
+            
+            const resultsContainer = document.getElementById('favoritesSearchResults');
+            resultsContainer.innerHTML = '';
+            
+            if (favorites.length === 0) {
+                resultsContainer.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No favorites yet. Add some favorites first!</div>';
+                return;
+            }
+            
+            let filteredFavorites = favorites;
+            if (searchTerm) {
+                filteredFavorites = favorites.filter(fav => 
+                    fav.Title.toLowerCase().includes(searchTerm) ||
+                    (fav.Plot && fav.Plot.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            if (filteredFavorites.length === 0) {
+                resultsContainer.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No favorites found matching your search.</div>';
+                return;
+            }
+            
+            filteredFavorites.forEach(fav => {
+                const isInList = currentItems.includes(fav.imdbID);
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `favorite-search-item ${isInList ? 'selected' : ''}`;
+                
+                itemDiv.innerHTML = `
+                    <div>
+                        <strong>${sanitizeHTML(fav.Title)}</strong>
+                        <div style="color:#b2bec3; font-size:0.9rem;">
+                            ${fav.Year} • ${fav.Type === 'series' ? 'TV Series' : 'Movie'} • ⭐ ${fav.imdbRating || 'N/A'}
+                        </div>
+                    </div>
+                    <button class="add-to-list-btn" onclick="toggleFavoriteInList('${fav.imdbID}')" ${isInList ? 'disabled style="background:#666;"' : ''}>
+                        ${isInList ? '✓ Added' : '+ Add'}
+                    </button>
+                `;
+                
+                resultsContainer.appendChild(itemDiv);
+            });
+        }
+
+        function toggleFavoriteInList(favId) {
+            const list = customLists.find(l => l.id === currentListId);
+            if (!list) return;
+            
+            const index = list.items.indexOf(favId);
+            if (index === -1) {
+                // Add to list
+                list.items.push(favId);
+                showToast('Added to list!', 'success');
+            } else {
+                // Remove from list
+                list.items.splice(index, 1);
+                showToast('Removed from list', 'info');
+            }
+            
+            list.lastModified = new Date().toISOString();
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_LISTS, JSON.stringify(customLists));
+            
+            // Update UI
+            renderCurrentListItems();
+            searchFavorites(); // Refresh search results
+            renderCustomLists(); // Update list cards
+        }
+
+        function renderCurrentListItems() {
+            const list = customLists.find(l => l.id === currentListId);
+            if (!list) return;
+            
+            const container = document.getElementById('currentListItems');
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            container.innerHTML = '';
+            
+            if (list.items.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">No items in this list yet. Add some favorites above!</div>';
+                return;
+            }
+            
+            list.items.forEach(favId => {
+                const fav = favorites.find(f => f.imdbID === favId);
+                if (!fav) return;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'current-list-item';
+                
+                itemDiv.innerHTML = `
+                    <div>
+                        <strong>${sanitizeHTML(fav.Title)}</strong>
+                        <div style="color:#b2bec3; font-size:0.9rem;">
+                            ${fav.Year} • ${fav.Type === 'series' ? 'TV Series' : 'Movie'}
+                        </div>
+                    </div>
+                    <button class="remove-from-list-btn" onclick="toggleFavoriteInList('${fav.imdbID}')">
+                        Remove
+                    </button>
+                `;
+                
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function saveListChanges() {
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_LISTS, JSON.stringify(customLists));
+            showToast('List changes saved!', 'success');
+            closeListManagementModal();
+        }
+
+        function viewList(listId) {
+            const list = customLists.find(l => l.id === listId);
+            if (!list) {
+                showToast('List not found!', 'error');
+                return;
+            }
+            
+            currentListId = listId;
+            
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const listItems = list.items.map(itemId => favorites.find(f => f.imdbID === itemId)).filter(Boolean);
+            
+            document.getElementById('listModalTitle').textContent = list.name;
+            
+            let contentHTML = `
+                <div style="color:#b2bec3; margin-bottom:20px;">
+                    <div>📅 Created: ${new Date(list.created).toLocaleDateString()}</div>
+                    <div>🔄 Last Modified: ${new Date(list.lastModified).toLocaleDateString()}</div>
+                    <div>📊 Total Items: ${list.items.length}</div>
+                </div>
+            `;
+            
+            if (listItems.length > 0) {
+                contentHTML += '<h3 style="color:#00b894; margin-bottom:15px;">List Items:</h3>';
+                contentHTML += '<div style="display:flex; flex-direction:column; gap:15px;">';
+                
+                listItems.forEach((item, index) => {
+                    const poster = item.Poster && item.Poster !== "N/A" 
+                        ? item.Poster 
+                        : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+                    
+                    const imdbUrl = getImdbUrl(item.imdbID);
+                    
+                    contentHTML += `
+                        <div style="display:flex; gap:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:10px; align-items:center;">
+                            <div style="font-weight:bold; color:#00b894; min-width:30px; font-size:1.2rem;">#${index + 1}</div>
+                            <img src="${poster}" 
+                                 style="width:60px; height:90px; object-fit:cover; border-radius:6px;"
+                                 onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                            <div style="flex:1;">
+                                <div style="font-weight:bold; color:white;">${sanitizeHTML(item.Title)}</div>
+                                <div style="color:#b2bec3; font-size:0.9rem;">
+                                    ⭐ ${item.imdbRating || "N/A"} • ${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}
+                                </div>
+                                <div style="margin-top:5px;">
+                                    <a href="${imdbUrl}" target="_blank" style="color:#f5c518; text-decoration:none; font-size:0.8rem;">
+                                        🔗 IMDb Page
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentHTML += '</div>';
+            } else {
+                contentHTML += `
+                    <div style="text-align:center; padding:40px; color:#888; background:rgba(255,255,255,0.05); border-radius:10px;">
+                        <div style="font-size:3rem; margin-bottom:15px;">📭</div>
+                        <h4 style="color:#b2bec3;">No items in this list</h4>
+                        <p>Add items from your favorites to this list!</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('listModalContent').innerHTML = contentHTML;
+            document.getElementById('viewListModal').classList.add('active');
+        }
+
+        // =============================
+        // 💾 SAVE AS IMAGE FUNCTIONS
+        // =============================
+
+        // Save individual movie/TV show as image
+        function saveItemAsImage(itemId) {
+            const item = [...preloadShowIDs, ...preloadMovieIDs].find(i => i.id === itemId);
+            if (!item) {
+                showToast("Item not found!", "error");
+                return;
+            }
+            
+            // Create export container
+            const exportContainer = document.createElement('div');
+            exportContainer.style.cssText = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: 600px;
+                background: #1a1a1a;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                font-family: 'Segoe UI', sans-serif;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            `;
+            
+            const type = preloadShowIDs.find(s => s.id === itemId) ? 'TV Series' : 'Movie';
+            const imdbUrl = getImdbUrl(itemId);
+            
+            exportContainer.innerHTML = `
+                <div style="text-align:center; margin-bottom:25px;">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">${type === 'Movie' ? '🎬' : '📺'}</div>
+                    <h1 style="color:#00b894; margin:0; font-size:2.2rem;">${sanitizeHTML(item.title)}</h1>
+                    <p style="color:#b2bec3; font-size:1.2rem; margin-top:10px;">${item.year}</p>
+                </div>
+                
+                <div style="display:flex; gap:20px; margin-bottom:25px;">
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:4rem; color:#FFD700; margin-bottom:10px;">⭐ ${item.rating}</div>
+                        <div style="color:#b2bec3;">IMDb Rating</div>
+                    </div>
+                    <div style="flex:1; text-align:center;">
+                        <div style="font-size:3rem; color:#00b894; margin-bottom:10px;">${type === 'Movie' ? '🎬' : '📺'}</div>
+                        <div style="color:#b2bec3;">${type}</div>
+                    </div>
+                </div>
+                
+                <div style="background:rgba(0,184,148,0.1); padding:20px; border-radius:12px; margin-bottom:25px; border-left:4px solid #00b894;">
+                    <h3 style="color:#00b894; margin-top:0;">Available on:</h3>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <a href="${imdbUrl}" target="_blank" style="background:#f5c518; color:#000; padding:8px 15px; border-radius:6px; font-weight:bold; text-decoration:none;">IMDb</a>
+                        <div style="background:#FF9900; color:#232F3E; padding:8px 15px; border-radius:6px; font-weight:bold;">Amazon</div>
+                        <div style="background:#00A8E1; color:white; padding:8px 15px; border-radius:6px; font-weight:bold;">Prime Video</div>
+                        <div style="background:#FF0000; color:white; padding:8px 15px; border-radius:6px; font-weight:bold;">YouTube Trailers</div>
+                    </div>
+                </div>
+                
+                <div style="text-align:center; color:#666; font-size:0.9rem; border-top:2px solid #333; padding-top:20px;">
+                    <div style="margin-bottom:5px;">Generated by <span style="color:#00b894; font-weight:bold;">Favorsite</span></div>
+                    <div>${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(exportContainer);
+            
+            // Generate image
+            html2canvas(exportContainer, {
+                backgroundColor: '#1a1a1a',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true
+            }).then(canvas => {
+                document.body.removeChild(exportContainer);
+                
+                // Download image
+                const link = document.createElement('a');
+                const fileName = `favorsite-${item.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${Date.now()}.png`;
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast(`"${item.title}" saved as image! 📸`, "success");
+            }).catch(error => {
+                console.error('Error saving image:', error);
+                document.body.removeChild(exportContainer);
+                showToast('Failed to save image. Please try again.', "error");
+            });
+        }
+
+        // Save favorite item as image (with user ratings and notes)
+        function saveFavoriteAsImage(itemId) {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const item = favorites.find(f => f.imdbID === itemId);
+            
+            if (!item) {
+                showToast("Favorite item not found!", "error");
+                return;
+            }
+            
+            // Create export container
+            const exportContainer = document.createElement('div');
+            exportContainer.style.cssText = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: 600px;
+                background: #1a1a1a;
+                color: white;
+                padding: 30px;
+                border-radius: 20px;
+                font-family: 'Segoe UI', sans-serif;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            `;
+            
+            const poster = item.Poster && item.Poster !== "N/A" 
+                ? item.Poster 
+                : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+            
+            // Generate star rating display
+            const rating = item.userRating || 0;
+            const stars = renderStarPreview(rating);
+            const imdbUrl = getImdbUrl(item.imdbID);
+            
+            exportContainer.innerHTML = `
+                <div style="display:flex; gap:25px; margin-bottom:25px;">
+                    <img src="${poster}" 
+                         style="width:180px; height:270px; object-fit:cover; border-radius:12px; border:3px solid #00b894;"
+                         onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                    <div style="flex:1;">
+                        <h1 style="color:#00b894; margin:0 0 10px 0; font-size:2rem; line-height:1.2;">${sanitizeHTML(item.Title)}</h1>
+                        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+                            <div style="background:#00b894; color:#121212; padding:5px 12px; border-radius:20px; font-weight:bold;">
+                                #${item.rank || 1}
+                            </div>
+                            <div style="color:#b2bec3;">${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}</div>
+                        </div>
+                        
+                        <div style="margin-bottom:20px;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+                                <span style="color:#FFD700; font-size:1.5rem;">${stars}</span>
+                                <span style="color:#FFD700; font-weight:bold; font-size:1.2rem;">${rating.toFixed(1)}/10</span>
+                            </div>
+                            <div style="color:#b2bec3; font-size:0.9rem;">
+                                ${rating ? 'Your Rating' : 'Not Rated Yet'}
+                            </div>
+                        </div>
+                        
+                        <div style="background:rgba(0,184,148,0.1); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div style="color:#00b894; font-weight:bold; margin-bottom:5px;">⭐ IMDb Rating:</div>
+                            <div style="font-size:1.5rem; font-weight:bold;">${item.imdbRating || "N/A"}/10</div>
+                        </div>
+                        
+                        <div style="margin-top:15px;">
+                            <a href="${imdbUrl}" target="_blank" style="background:#f5c518; color:#000; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">
+                                🔗 View on IMDb
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                ${item.userNote ? `
+                <div style="background:rgba(108,92,231,0.1); padding:20px; border-radius:12px; margin-bottom:25px; border-left:4px solid #6c5ce7;">
+                    <h3 style="color:#6c5ce7; margin-top:0; margin-bottom:10px;">📝 Your Personal Notes:</h3>
+                    <p style="color:white; line-height:1.6; font-style:italic; margin:0;">"${sanitizeHTML(item.userNote).replace(/"/g, '&quot;')}"</p>
+                </div>
+                ` : ''}
+                
+                <div style="background:rgba(255,215,0,0.1); padding:20px; border-radius:12px; margin-bottom:25px; border-left:4px solid #FFD700;">
+                    <h3 style="color:#FFD700; margin-top:0; margin-bottom:10px;">📖 Synopsis:</h3>
+                    <p style="color:#b2bec3; line-height:1.6; margin:0;">${sanitizeHTML(item.Plot || "No description available")}</p>
+                </div>
+                
+                <div style="text-align:center; color:#666; font-size:0.9rem; border-top:2px solid #333; padding-top:20px;">
+                    <div style="margin-bottom:5px;">Generated by <span style="color:#00b894; font-weight:bold;">Favorsite</span> • Your Personal Favorites Manager</div>
+                    <div>${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                </div>
+            `;
+            
+            document.body.appendChild(exportContainer);
+            
+            // Generate image
+            html2canvas(exportContainer, {
+                backgroundColor: '#1a1a1a',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                onclone: function(clonedDoc) {
+                    const img = clonedDoc.querySelector('img');
+                    if (img) {
+                        img.crossOrigin = 'Anonymous';
+                        img.onerror = function() {
+                            this.src = item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series;
+                        };
+                    }
+                }
+            }).then(canvas => {
+                document.body.removeChild(exportContainer);
+                
+                // Download image
+                const link = document.createElement('a');
+                const fileName = `favorsite-favorite-${item.Title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${Date.now()}.png`;
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast(`"${item.Title}" saved as image! 📸`, "success");
+            }).catch(error => {
+                console.error('Error saving image:', error);
+                document.body.removeChild(exportContainer);
+                showToast('Failed to save image. Please try again.', "error");
+            });
+        }
+
+        // Save complete favorites collection as image
+        function saveCompleteFavoritesAsImage() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            if (favorites.length === 0) {
+                showToast("No favorites to save! Add some favorites first.", "error");
+                return;
+            }
+            
+            // Create export container
+            const exportContainer = document.createElement('div');
+            exportContainer.style.cssText = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: 800px;
+                background: #1a1a1a;
+                color: white;
+                padding: 40px;
+                border-radius: 25px;
+                font-family: 'Segoe UI', sans-serif;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            `;
+            
+            // Sort favorites by rank
+            const sortedFavorites = [...favorites].sort((a, b) => (a.rank || 999) - (b.rank || 999));
+            
+            // Calculate statistics
+            const seriesCount = favorites.filter(item => item.Type === "series").length;
+            const movieCount = favorites.filter(item => item.Type === "movie").length;
+            const ratedCount = favorites.filter(item => item.userRating).length;
+            const notesCount = favorites.filter(item => item.userNote).length;
+            const avgRating = favorites.length > 0 
+                ? (favorites.reduce((sum, item) => sum + (parseFloat(item.imdbRating) || 0), 0) / favorites.length).toFixed(1)
+                : 0;
+            
+            exportContainer.innerHTML = `
+                <div style="text-align:center; margin-bottom:30px;">
+                    <div style="font-size:3.5rem; color:#00b894; margin-bottom:10px;">🎬</div>
+                    <h1 style="color:#00b894; margin:0; font-size:2.8rem;">My Complete Favorites Collection</h1>
+                    <p style="color:#b2bec3; font-size:1.1rem; margin-top:10px;">Personal Taste Profile</p>
+                </div>
+                
+                <!-- Statistics Section -->
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:30px;">
+                    <div style="text-align:center; padding:15px; background:rgba(0,184,148,0.1); border-radius:12px;">
+                        <div style="font-size:2.2rem; color:#00b894; font-weight:bold;">${favorites.length}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Total Items</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(0,184,148,0.1); border-radius:12px;">
+                        <div style="font-size:2.2rem; color:#00b894; font-weight:bold;">${movieCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Movies</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(0,184,148,0.1); border-radius:12px;">
+                        <div style="font-size:2.2rem; color:#00b894; font-weight:bold;">${seriesCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">TV Series</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(0,184,148,0.1); border-radius:12px;">
+                        <div style="font-size:2.2rem; color:#00b894; font-weight:bold;">${avgRating}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Avg. Rating</div>
+                    </div>
+                </div>
+                
+                <!-- Additional Stats -->
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:15px; margin-bottom:30px;">
+                    <div style="text-align:center; padding:15px; background:rgba(108,92,231,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#6c5ce7; font-weight:bold;">${ratedCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Personal Ratings</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(108,92,231,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#6c5ce7; font-weight:bold;">${notesCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Personal Notes</div>
+                    </div>
+                </div>
+                
+                <!-- Top 10 Favorites -->
+                <div style="margin-bottom:30px;">
+                    <h2 style="color:#00b894; margin-bottom:20px; border-bottom:2px solid #333; padding-bottom:10px;">🏆 Top 10 Favorites</h2>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        ${sortedFavorites.slice(0, 10).map((item, index) => {
+                            const poster = item.Poster && item.Poster !== "N/A" 
+                                ? item.Poster 
+                                : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+                            
+                            const rating = item.userRating || 0;
+                            const stars = renderStarPreview(rating);
+                            const imdbUrl = getImdbUrl(item.imdbID);
+                            
+                            return `
+                                <div style="display:flex; gap:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; align-items:center;">
+                                    <div style="font-weight:bold; color:#00b894; min-width:40px; font-size:1.5rem; text-align:center;">#${index + 1}</div>
+                                    <img src="${poster}" 
+                                         style="width:80px; height:120px; object-fit:cover; border-radius:8px; border:2px solid #333;"
+                                         onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:bold; color:white; font-size:1.2rem; margin-bottom:5px;">${sanitizeHTML(item.Title)}</div>
+                                        <div style="color:#b2bec3; font-size:0.9rem; margin-bottom:5px;">
+                                            ⭐ ${item.imdbRating || "N/A"} • ${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}
+                                        </div>
+                                        ${rating > 0 ? `
+                                            <div style="color:#FFD700; font-size:1rem; margin-bottom:5px;">
+                                                ${stars} <span style="color:#FFD700; font-weight:bold;">${rating.toFixed(1)}/10</span>
+                                            </div>
+                                        ` : ''}
+                                        <div style="margin-top:5px;">
+                                            <a href="${imdbUrl}" target="_blank" style="color:#f5c518; text-decoration:none; font-size:0.8rem;">
+                                                🔗 IMDb Page
+                                            </a>
+                                        </div>
+                                        ${item.Plot ? `<div style="color:#888; font-size:0.85rem; margin-top:5px; line-height:1.4; max-height:40px; overflow:hidden;">${sanitizeHTML(item.Plot.substring(0, 100))}...</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                        
+                        ${sortedFavorites.length > 10 ? `
+                            <div style="text-align:center; padding:20px; color:#b2bec3; background:rgba(255,255,255,0.05); border-radius:10px; font-size:0.9rem;">
+                                + ${sortedFavorites.length - 10} more item(s) in your collection
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <!-- Genre Breakdown -->
+                <div style="margin-bottom:30px;">
+                    <h2 style="color:#9b59b6; margin-bottom:15px; border-bottom:2px solid #333; padding-bottom:8px;">🎭 Genre Distribution</h2>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        ${(() => {
+                            const genreMap = {};
+                            favorites.forEach(item => {
+                                const genres = item.Genre ? item.Genre.split(', ') : ['Unknown'];
+                                genres.forEach(genre => {
+                                    genreMap[genre] = (genreMap[genre] || 0) + 1;
+                                });
+                            });
+                            
+                            const topGenres = Object.entries(genreMap)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 8);
+                            
+                            return topGenres.map(([genre, count]) => `
+                                <div style="background:rgba(155,89,182,0.2); color:#9b59b6; padding:8px 15px; border-radius:20px; font-size:0.9rem; font-weight:bold;">
+                                    ${genre} <span style="color:white;">${count}</span>
+                                </div>
+                            `).join('');
+                        })()}
+                    </div>
+                </div>
+                
+                <!-- Personal Insights -->
+                ${notesCount > 0 ? `
+                <div style="background:rgba(255,215,0,0.1); padding:25px; border-radius:15px; margin-bottom:30px; border-left:4px solid #FFD700;">
+                    <h3 style="color:#FFD700; margin-top:0; margin-bottom:15px;">📝 Your Personal Insights</h3>
+                    <p style="color:#b2bec3; line-height:1.6;">
+                        You've added personal notes to <strong style="color:#FFD700">${notesCount}</strong> items and rated <strong style="color:#FFD700">${ratedCount}</strong> items. 
+                        Your most recent favorite is <strong style="color:#00b894">"${sortedFavorites[0] ? sanitizeHTML(sortedFavorites[0].Title) : ''}"</strong>.
+                    </p>
+                </div>
+                ` : ''}
+                
+                <!-- Footer -->
+                <div style="text-align:center; color:#666; font-size:0.9rem; border-top:2px solid #333; padding-top:25px;">
+                    <div style="margin-bottom:5px;">Generated by <span style="color:#00b894; font-weight:bold;">Favorsite</span> • Complete Favorites Collection</div>
+                    <div>📅 ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • 🆔 ${favorites.length} items</div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:#888;">Share your taste profile with friends!</div>
+                </div>
+            `;
+            
+            document.body.appendChild(exportContainer);
+            
+            // Generate image
+            html2canvas(exportContainer, {
+                backgroundColor: '#1a1a1a',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                onclone: function(clonedDoc) {
+                    const images = clonedDoc.querySelectorAll('img');
+                    images.forEach(img => {
+                        img.crossOrigin = 'Anonymous';
+                        img.onerror = function() {
+                            const type = this.src.includes('movie') ? 'movie' : 'series';
+                            this.src = type === 'movie' ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series;
+                        };
+                    });
+                }
+            }).then(canvas => {
+                document.body.removeChild(exportContainer);
+                
+                // Download image
+                const link = document.createElement('a');
+                const fileName = `favorsite-complete-favorites-${Date.now()}.png`;
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast("Complete favorites collection saved as image! 📸", "success");
+            }).catch(error => {
+                console.error('Error saving complete favorites image:', error);
+                document.body.removeChild(exportContainer);
+                showToast('Failed to save image. Please try again.', "error");
+            });
+        }
+
+        // Save list as image
+        function saveListAsImage(listId) {
+            const list = customLists.find(l => l.id === listId);
+            if (!list) {
+                showToast('List not found!', 'error');
+                return;
+            }
+            
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const listItems = list.items.map(itemId => favorites.find(f => f.imdbID === itemId)).filter(Boolean);
+            
+            // Create export container
+            const exportContainer = document.createElement('div');
+            exportContainer.style.cssText = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: 700px;
+                background: #1a1a1a;
+                color: white;
+                padding: 40px;
+                border-radius: 25px;
+                font-family: 'Segoe UI', sans-serif;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            `;
+            
+            // Calculate stats
+            const seriesCount = listItems.filter(item => item.Type === "series").length;
+            const movieCount = listItems.filter(item => item.Type === "movie").length;
+            const avgRating = listItems.length > 0 
+                ? (listItems.reduce((sum, item) => sum + (parseFloat(item.imdbRating) || 0), 0) / listItems.length).toFixed(1)
+                : 0;
+            
+            exportContainer.innerHTML = `
+                <div style="text-align:center; margin-bottom:30px;">
+                    <div style="font-size:3rem; color:#9b59b6; margin-bottom:10px;">📋</div>
+                    <h1 style="color:#9b59b6; margin:0; font-size:2.5rem; line-height:1.2;">${sanitizeHTML(list.name)}</h1>
+                    <p style="color:#b2bec3; font-size:1.1rem; margin-top:10px;">Custom Collection List</p>
+                </div>
+                
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-bottom:30px;">
+                    <div style="text-align:center; padding:15px; background:rgba(155,89,182,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#9b59b6; font-weight:bold;">${list.items.length}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Total Items</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(155,89,182,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#9b59b6; font-weight:bold;">${movieCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Movies</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(155,89,182,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#9b59b6; font-weight:bold;">${seriesCount}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">TV Series</div>
+                    </div>
+                    <div style="text-align:center; padding:15px; background:rgba(155,89,182,0.1); border-radius:12px;">
+                        <div style="font-size:2rem; color:#9b59b6; font-weight:bold;">${avgRating}</div>
+                        <div style="color:#b2bec3; font-size:0.9rem;">Avg. Rating</div>
+                    </div>
+                </div>
+                
+                ${listItems.length > 0 ? `
+                <div style="margin-bottom:30px;">
+                    <h3 style="color:#00b894; margin-bottom:20px; border-bottom:2px solid #333; padding-bottom:10px;">🎬 List Items</h3>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
+                        ${listItems.slice(0, 8).map((item, index) => {
+                            const poster = item.Poster && item.Poster !== "N/A" 
+                                ? item.Poster 
+                                : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+                            
+                            const imdbUrl = getImdbUrl(item.imdbID);
+                            
+                            return `
+                                <div style="display:flex; gap:15px; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; align-items:center;">
+                                    <div style="font-weight:bold; color:#00b894; min-width:35px; font-size:1.3rem;">#${index + 1}</div>
+                                    <img src="${poster}" 
+                                         style="width:70px; height:105px; object-fit:cover; border-radius:8px; border:2px solid #333;"
+                                         onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:bold; color:white; font-size:1.1rem; margin-bottom:5px;">${sanitizeHTML(item.Title)}</div>
+                                        <div style="color:#b2bec3; font-size:0.9rem;">
+                                            ⭐ ${item.imdbRating || "N/A"} • ${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}
+                                        </div>
+                                        <div style="margin-top:5px;">
+                                            <a href="${imdbUrl}" target="_blank" style="color:#f5c518; text-decoration:none; font-size:0.8rem;">
+                                                🔗 IMDb Page
+                                            </a>
+                                        </div>
+                                        ${item.Plot ? `<div style="color:#888; font-size:0.85rem; margin-top:5px; line-height:1.4;">${sanitizeHTML(item.Plot.substring(0, 80))}...</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                        
+                        ${listItems.length > 8 ? `
+                            <div style="text-align:center; padding:20px; color:#b2bec3; background:rgba(255,255,255,0.05); border-radius:10px; font-size:0.9rem;">
+                                + ${listItems.length - 8} more item(s) in this list
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : `
+                <div style="text-align:center; padding:40px; color:#888; background:rgba(255,255,255,0.05); border-radius:15px; margin-bottom:30px;">
+                    <div style="font-size:4rem; margin-bottom:15px;">📭</div>
+                    <h3 style="color:#b2bec3; margin-bottom:10px;">Empty List</h3>
+                    <p>No items added to this collection yet</p>
+                </div>
+                `}
+                
+                <div style="text-align:center; color:#666; font-size:0.9rem; border-top:2px solid #333; padding-top:25px;">
+                    <div style="margin-bottom:5px;">Generated by <span style="color:#00b894; font-weight:bold;">Favorsite</span> • Custom List Collection</div>
+                    <div>📅 ${new Date(list.created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} • 🆔 ${list.id.substring(0, 8)}</div>
+                    <div style="margin-top:10px; font-size:0.8rem;">Share your collections with friends!</div>
+                </div>
+            `;
+            
+            document.body.appendChild(exportContainer);
+            
+            // Generate image
+            html2canvas(exportContainer, {
+                backgroundColor: '#1a1a1a',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                allowTaint: true,
+                onclone: function(clonedDoc) {
+                    const images = clonedDoc.querySelectorAll('img');
+                    images.forEach(img => {
+                        img.crossOrigin = 'Anonymous';
+                        img.onerror = function() {
+                            const type = this.src.includes('movie') ? 'movie' : 'series';
+                            this.src = type === 'movie' ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series;
+                        };
+                    });
+                }
+            }).then(canvas => {
+                document.body.removeChild(exportContainer);
+                
+                // Download image
+                const link = document.createElement('a');
+                const fileName = `favorsite-list-${list.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${Date.now()}.png`;
+                link.download = fileName;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showToast(`"${list.name}" saved as image! 📸`, "success");
+            }).catch(error => {
+                console.error('Error saving list image:', error);
+                document.body.removeChild(exportContainer);
+                showToast('Failed to save image. Please try again.', "error");
+            });
+        }
+
+        function saveListAsImageFromModal() {
+            if (currentListId) {
+                saveListAsImage(currentListId);
+                closeViewListModal();
+            }
+        }
+
+        function deleteList(listId) {
+            if (!confirm('Are you sure you want to delete this list? This action cannot be undone.')) {
+                return;
+            }
+            
+            customLists = customLists.filter(list => list.id !== listId);
+            localStorage.setItem(STORAGE_KEYS.CUSTOM_LISTS, JSON.stringify(customLists));
+            renderCustomLists();
+            showToast('List deleted!', 'success');
+        }
+
+        function closeViewListModal() {
+            document.getElementById('viewListModal').classList.remove('active');
+            currentListId = null;
+        }
+
+        function bulkExportLists() {
+            if (customLists.length === 0) {
+                showToast('No custom lists to export!', 'error');
+                return;
+            }
+            
+            let exportHTML = `
+                <div style="padding:20px; text-align:center;">
+                    <h3 style="color:#9b59b6; margin-bottom:20px;">📤 Bulk Export Custom Lists</h3>
+                    <p style="color:#b2bec3; margin-bottom:25px;">Select lists to export as individual images:</p>
+                    <div style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; padding:10px;">
+            `;
+            
+            customLists.forEach(list => {
+                exportHTML += `
+                    <label style="display:flex; align-items:center; gap:10px; padding:12px; background:rgba(155,89,182,0.1); border-radius:8px; cursor:pointer;">
+                        <input type="checkbox" value="${list.id}" style="transform:scale(1.2);">
+                        <span style="color:white; font-weight:bold;">${sanitizeHTML(list.name)}</span>
+                        <span style="margin-left:auto; color:#b2bec3; font-size:0.9rem;">${list.items.length} items</span>
+                    </label>
+                `;
+            });
+            
+            exportHTML += `
+                    </div>
+                    <button onclick="processBulkExport()" style="margin-top:20px; background:#9b59b6; color:white; border:none; padding:12px 30px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:1rem;">
+                        💾 Export Selected Lists
+                    </button>
+                </div>
+            `;
+            
+            // Create and show modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close-modal" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    ${exportHTML}
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on click outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function processBulkExport() {
+            const selectedLists = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedLists.length === 0) {
+                showToast('Please select at least one list to export!', 'error');
+                return;
+            }
+            
+            showToast(`Starting export of ${selectedLists.length} list(s)... This may take a moment.`, 'info');
+            
+            // Remove modal
+            document.querySelector('.modal.active')?.remove();
+            
+            // Export each selected list
+            selectedLists.forEach((listId, index) => {
+                setTimeout(() => {
+                    saveListAsImage(listId);
+                }, index * 2000); // 2-second delay between exports
+            });
+        }
+
+        // =============================
+        // 📝 PERSONAL NOTES FUNCTIONS
+        // =============================
+
+        function openNotesModal(id) {
+            currentEditingId = id;
+            const item = initializeFavorites().find(f => f.imdbID === id);
+            document.getElementById('descriptionInput').value = item?.userNote || '';
+            document.getElementById('descriptionModal').classList.add('active');
+        }
+
+        function saveDescription() {
+            if (!currentEditingId) return;
+            const note = document.getElementById('descriptionInput').value.trim();
+            let favorites = initializeFavorites();
+            const item = favorites.find(f => f.imdbID === currentEditingId);
+            if (item) {
+                item.userNote = note || null;
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                
+                // Get current active tab
+                const currentTab = document.querySelector(".tab-btn.active[data-tab]");
+                const currentTabValue = currentTab ? currentTab.getAttribute("data-tab") : "all";
+                renderFavorites(currentTabValue);
+                
+                closeDescriptionModal();
+                showToast('Notes saved successfully!', 'success');
+            }
+        }
+
+        function clearDescription() {
+            document.getElementById('descriptionInput').value = '';
+        }
+
+        function closeDescriptionModal() {
+            document.getElementById('descriptionModal').classList.remove('active');
+            document.getElementById('descriptionInput').value = '';
+            currentEditingId = null;
+        }
+
+        // =============================
+        // 🎥 TRAILER SEARCH
+        // =============================
+
+        function searchTrailer() {
+            const query = document.getElementById('trailerSearchInput').value.trim();
+            if (!query) {
+                document.getElementById('trailerResults').innerHTML = 
+                    '<p style="color:#ff6b6b;">Please enter a movie or show name</p>';
+                return;
+            }
+            
+            const trailerUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + " official trailer")}`;
+            
+            document.getElementById('trailerResults').innerHTML = `
+                <h4 style="color:#00b894; margin-bottom:10px;">🎬 "${sanitizeHTML(query)}" Trailer</h4>
+                <p style="margin-bottom:15px;">Search for official trailer on YouTube:</p>
+                <a href="${trailerUrl}" target="_blank" style="display:inline-block; background:#FF0000; color:white; padding:12px 25px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                    ▶️ Search for Trailer on YouTube
+                </a>
+                <p style="margin-top:15px; color:#888; font-size:0.9rem;">
+                    Note: This will open YouTube search results
+                </p>
+            `;
+        }
+
+        // =============================
+        // 📱 NAVIGATION
+        // =============================
+
+        function setupNavigation() {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const sections = {
+                'home': document.getElementById('home'),
+                'search': document.getElementById('search'),
+                'topShows': document.getElementById('topShows'),
+                'topMovies': document.getElementById('topMovies'),
+                'favoritesSection': document.getElementById('favoritesSection'),
+                'affiliateSection': document.getElementById('affiliateSection'),
+                'customListsSection': document.getElementById('customListsSection')
+            };
+
+            // Add click listeners to all nav buttons
+            navButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sectionId = this.dataset.section;
+                    
+                    // Remove active class from all buttons
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    Object.values(sections).forEach(section => {
+                        if (section) {
+                            section.classList.remove('active-section');
+                            section.classList.add('hidden-section');
+                        }
+                    });
+                    
+                    // Show selected section
+                    if (sections[sectionId]) {
+                        sections[sectionId].classList.remove('hidden-section');
+                        sections[sectionId].classList.add('active-section');
+                    }
+                    
+                    // Scroll to section
+                    if (sections[sectionId]) {
+                        sections[sectionId].scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Show home by default
+            sections['home'].classList.add('active-section');
+        }
+
+        // =============================
+        // 📊 AFFILIATE TABS
+        // =============================
+
+        function setupAffiliateTabs() {
+            const affiliateTabs = document.querySelectorAll('.affiliate-tab');
+            const affiliateContents = document.querySelectorAll('.affiliate-content');
+            
+            affiliateTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabType = tab.getAttribute('data-affiliate');
+                    
+                    // Remove active class from all tabs
+                    affiliateTabs.forEach(t => t.classList.remove('active'));
+                    affiliateContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    if (tabType) {
+                        const content = document.getElementById(`${tabType}Affiliates`);
+                        if (content) content.classList.add('active');
+                    }
+                });
+            });
+            
+            // Initialize with first tab active
+            if (affiliateTabs.length > 0) {
+                const firstTab = affiliateTabs[0];
+                const firstTabType = firstTab.getAttribute('data-affiliate');
+                if (firstTabType) {
+                    const firstContent = document.getElementById(`${firstTabType}Affiliates`);
+                    if (firstContent) firstContent.classList.add('active');
+                }
+            }
+        }
+
+        // =============================
+        // 🛠️ HELPER FUNCTIONS
+        // =============================
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function updateFavoritesStats() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            const seriesCount = favorites.filter(fav => fav.Type === "series").length;
+            const movieCount = favorites.filter(fav => fav.Type === "movie").length;
+            
+            const totalEl = document.getElementById("totalFavorites");
+            const seriesEl = document.getElementById("seriesCount");
+            const moviesEl = document.getElementById("moviesCount");
+            
+            if (totalEl) totalEl.textContent = `${favorites.length} items`;
+            if (seriesEl) seriesEl.textContent = `${seriesCount} series`;
+            if (moviesEl) moviesEl.textContent = `${movieCount} movies`;
+        }
+
+        // =============================
+        // 🎮 EVENT HANDLERS
+        // =============================
+
+        document.addEventListener("click", async function(e) {
+            let favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            // Get current active tab
+            const currentTab = document.querySelector(".tab-btn.active[data-tab]");
+            const currentTabValue = currentTab ? currentTab.getAttribute("data-tab") : "all";
+            
+            // Add/Remove favorite
+            if (e.target.classList.contains("favBtn")) {
+                const id = e.target.getAttribute("data-id");
+                const type = e.target.getAttribute("data-type") || 'series';
+                const isFav = favorites.some(fav => fav.imdbID === id);
+                
+                if (isFav) {
+                    favorites = favorites.filter(fav => fav.imdbID !== id);
+                    e.target.textContent = "🤍 Add";
+                    showToast('Removed from favorites', 'info');
+                } else {
+                    try {
+                        const response = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
+                        const data = await response.json();
+                        
+                        if (data.Response === "True") {
+                            favorites.push({
+                                imdbID: data.imdbID,
+                                Title: data.Title,
+                                Poster: data.Poster,
+                                imdbRating: data.imdbRating,
+                                Year: data.Year,
+                                Plot: data.Plot || "No description available",
+                                Type: data.Type || type,
+                                Genre: data.Genre || "Unknown",
+                                rank: favorites.length + 1
+                            });
+                            e.target.textContent = "❤️ Remove";
+                            showToast('Added to favorites!', 'success');
+                        }
+                    } catch (error) {
+                        console.error("Error adding favorite:", error);
+                        const allItems = [...preloadShowIDs, ...preloadMovieIDs];
+                        const fallbackData = allItems.find(item => item.id === id);
+                        
+                        if (fallbackData) {
+                            favorites.push({
+                                imdbID: id,
+                                Title: fallbackData.title,
+                                Poster: type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series,
+                                imdbRating: fallbackData.rating,
+                                Year: fallbackData.year,
+                                Plot: "Description not available",
+                                Type: type,
+                                Genre: "Unknown",
+                                rank: favorites.length + 1
+                            });
+                            e.target.textContent = "❤️ Remove";
+                            showToast('Added to favorites!', 'success');
+                        } else {
+                            showToast('Failed to add to favorites', 'error');
+                            return;
+                        }
+                    }
+                }
+                
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                renderFavorites(currentTabValue);
+                
+                // Update all buttons with same ID
+                document.querySelectorAll(`.favBtn[data-id="${id}"]`).forEach(btn => {
+                    btn.textContent = favorites.some(fav => fav.imdbID === id) 
+                        ? "❤️ Remove" 
+                        : "🤍 Add";
+                });
+            }
+            
+            // Tab buttons
+            if (e.target.classList.contains("tab-btn") && e.target.hasAttribute("data-tab")) {
+                document.querySelectorAll(".tab-btn[data-tab]").forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+                
+                const tab = e.target.getAttribute("data-tab");
+                renderFavorites(tab);
+            }
+            
+            // Star rating (clicking on stars directly)
+            if (e.target.classList.contains("star-btn") || e.target.closest('.star-btn')) {
+                const starBtn = e.target.classList.contains("star-btn") ? e.target : e.target.closest('.star-btn');
+                const value = parseFloat(starBtn.getAttribute("data-value"));
+                const id = starBtn.getAttribute("data-id");
+                
+                const itemIndex = favorites.findIndex(f => f.imdbID === id);
+                if (itemIndex !== -1) {
+                    favorites[itemIndex].userRating = value;
+                    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                    renderFavorites(currentTabValue);
+                    showToast(`Rated ${value.toFixed(1)}/10`, 'success');
+                }
+            }
+            
+            // Remove button
+            if (e.target.classList.contains("removeBtn")) {
+                const id = e.target.getAttribute("data-id");
+                favorites = favorites.filter(fav => fav.imdbID !== id);
+                localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                
+                // Update all favorite buttons
+                document.querySelectorAll(`.favBtn[data-id="${id}"]`).forEach(btn => {
+                    btn.textContent = "🤍 Add";
+                });
+                
+                renderFavorites(currentTabValue);
+                showToast('Removed from favorites', 'info');
+            }
+            
+            // Move Up
+            if (e.target.classList.contains("upBtn")) {
+                const id = e.target.getAttribute("data-id");
+                const itemIndex = favorites.findIndex(f => f.imdbID === id);
+                
+                if (itemIndex > 0) {
+                    [favorites[itemIndex - 1], favorites[itemIndex]] = 
+                    [favorites[itemIndex], favorites[itemIndex - 1]];
+                    
+                    favorites.forEach((item, index) => {
+                        item.rank = index + 1;
+                    });
+                    
+                    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                    renderFavorites(currentTabValue);
+                    showToast('Moved item up', 'info');
+                }
+            }
+            
+            // Move Down
+            if (e.target.classList.contains("downBtn")) {
+                const id = e.target.getAttribute("data-id");
+                const itemIndex = favorites.findIndex(f => f.imdbID === id);
+                
+                if (itemIndex < favorites.length - 1) {
+                    [favorites[itemIndex], favorites[itemIndex + 1]] = 
+                    [favorites[itemIndex + 1], favorites[itemIndex]];
+                    
+                    favorites.forEach((item, index) => {
+                        item.rank = index + 1;
+                    });
+                    
+                    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+                    renderFavorites(currentTabValue);
+                    showToast('Moved item down', 'info');
+                }
+            }
+        });
+
+        function setupEventListeners() {
+            // Search button
+            const searchBtn = document.getElementById("searchBtn");
+            if (searchBtn) {
+                searchBtn.addEventListener("click", searchContent);
+            }
+            
+            // Search on Enter
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener("keypress", function(e) {
+                    if (e.key === "Enter") searchContent();
+                });
+            }
+            
+            // Clear favorites button
+            const clearBtn = document.getElementById("clearFavoritesBtn");
+            if (clearBtn) {
+                clearBtn.addEventListener("click", function() {
+                    if (confirm("Are you sure you want to clear all favorites?")) {
+                        localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify([]));
+                        renderFavorites();
+                        showToast("All favorites cleared!", 'info');
+                    }
+                });
+            }
+            
+            // Trailer search button
+            const searchTrailerBtn = document.getElementById("searchTrailerBtn");
+            if (searchTrailerBtn) {
+                searchTrailerBtn.addEventListener("click", searchTrailer);
+            }
+            
+            // Trailer search on Enter
+            const trailerSearchInput = document.getElementById("trailerSearchInput");
+            if (trailerSearchInput) {
+                trailerSearchInput.addEventListener("keypress", function(e) {
+                    if (e.key === "Enter") searchTrailer();
+                });
+            }
+            
+            // Create list button
+            const createListBtn = document.getElementById("createListBtn");
+            if (createListBtn) {
+                createListBtn.addEventListener("click", createCustomList);
+            }
+            
+            // Bulk export button
+            const bulkExportBtn = document.getElementById("bulkExportBtn");
+            if (bulkExportBtn) {
+                bulkExportBtn.addEventListener("click", bulkExportLists);
+            }
+            
+            // Create list on Enter
+            const newListName = document.getElementById("newListName");
+            if (newListName) {
+                newListName.addEventListener("keypress", function(e) {
+                    if (e.key === "Enter") createCustomList();
+                });
+            }
+            
+            // Export button menu
+            const exportBtn = document.getElementById('exportBtn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', showExportMenu);
+            }
+            
+            // Decimal rating input updates
+            const decimalRatingInput = document.getElementById('decimalRatingInput');
+            if (decimalRatingInput) {
+                decimalRatingInput.addEventListener('input', function() {
+                    updateRatingPreview(this.value);
+                });
+            }
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeAllModals();
+                }
+            });
+        }
+
+        function showExportMenu() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to export!", 'error');
+                return;
+            }
+            
+            const exportOptions = `
+                <div style="padding:10px;">
+                    <h4 style="color:#00b894; margin-bottom:15px;">Export Options</h4>
+                    <button onclick="exportAsJSON()" style="display:block; width:100%; padding:10px; margin:5px 0; background:#00b894; color:white; border:none; border-radius:6px; cursor:pointer;">
+                        💾 Export as JSON
+                    </button>
+                    <button onclick="exportAsCSV()" style="display:block; width:100%; padding:10px; margin:5px 0; background:#6c5ce7; color:white; border:none; border-radius:6px; cursor:pointer;">
+                        📊 Export as CSV
+                    </button>
+                    <button onclick="openShareModal()" style="display:block; width:100%; padding:10px; margin:5px 0; background:#FFD700; color:#000; border:none; border-radius:6px; cursor:pointer;">
+                        📤 Share
+                    </button>
+                    <button onclick="saveCompleteFavoritesAsImage()" style="display:block; width:100%; padding:10px; margin:5px 0; background:#9b59b6; color:white; border:none; border-radius:6px; cursor:pointer;">
+                        🖼️ Save Complete Image
+                    </button>
+                </div>
+            `;
+            
+            // Create and show export menu
+            const menu = document.createElement('div');
+            menu.style.cssText = `
+                position: absolute;
+                background: #1f1f1f;
+                border: 1px solid #333;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                z-index: 1000;
+                min-width: 200px;
+            `;
+            menu.innerHTML = exportOptions;
+            
+            const rect = this.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 5) + "px";
+            menu.style.left = (rect.left - 50) + "px";
+            
+            document.body.appendChild(menu);
+            
+            // Close menu on click outside
+            setTimeout(() => {
+                const closeMenu = (e) => {
+                    if (!menu.contains(e.target) && e.target !== this) {
+                        document.body.removeChild(menu);
+                        document.removeEventListener("click", closeMenu);
+                    }
+                };
+                document.addEventListener("click", closeMenu);
+            }, 0);
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            currentEditingId = null;
+            currentRatingId = null;
+            currentListId = null;
+        }
+
+        // =============================
+        // 📤 EXPORT & SHARE FUNCTIONS
+        // =============================
+
+        function openShareModal() {
+            const modal = document.getElementById("shareModal");
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            if (favorites.length === 0) {
+                showToast("Add some favorites first to share your taste!", 'error');
+                return;
+            }
+            
+            // Simple share content for now
+            const shareHTML = `
+                <div style="padding:20px; text-align:center;">
+                    <h3 style="color:#00b894;">My Favorites Collection</h3>
+                    <p>${favorites.length} items total</p>
+                    <p>Share your favorites with friends!</p>
+                </div>
+            `;
+            
+            document.getElementById("shareContent").innerHTML = shareHTML;
+            modal.classList.add('active');
+            document.getElementById("imagePreview").style.display = "none";
+        }
+
+        function closeShareModal() {
+            document.getElementById("shareModal").classList.remove('active');
+        }
+
+        function shareOnTwitter() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to share!", 'error');
+                return;
+            }
+            
+            const text = `Check out my favorite movies and TV shows on Favorsite!`;
+            const url = window.location.href;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        }
+
+        function shareOnFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        }
+
+        function copyShareText() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to share!", 'error');
+                return;
+            }
+            
+            let text = `🎬 My Favorites on Favorsite:\n\n`;
+            favorites.forEach((fav, index) => {
+                text += `${index + 1}. ${fav.Title} (⭐ ${fav.imdbRating || "N/A"})\n`;
+            });
+            text += `\nView at: ${window.location.href}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Share text copied to clipboard! 📋", 'success');
+            });
+        }
+
+        function exportAsJSON() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to export!", 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(favorites, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", dataUri);
+            link.setAttribute("download", `my-favorites-${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Favorites exported as JSON!', 'success');
+        }
+
+        function exportAsCSV() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to export!", 'error');
+                return;
+            }
+            
+            let csv = "Title,Type,Year,IMDb Rating,Your Rating,Your Notes,IMDb URL\n";
+            
+            favorites.forEach((fav) => {
+                const title = `"${fav.Title.replace(/"/g, '""')}"`;
+                const type = fav.Type === 'series' ? 'TV Series' : 'Movie';
+                const year = fav.Year || '';
+                const rating = fav.imdbRating || 'N/A';
+                const userRating = fav.userRating || '';
+                const userNote = fav.userNote ? `"${fav.userNote.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '';
+                const imdbUrl = getImdbUrl(fav.imdbID);
+                
+                csv += `${title},${type},${year},${rating},${userRating},${userNote},${imdbUrl}\n`;
+            });
+            
+            const dataUri = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(csv);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", dataUri);
+            link.setAttribute("download", `my-favorites-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Favorites exported as CSV!', 'success');
+        }
+
+        // =============================
+        // 🚀 INITIALIZE APP
+        // =============================
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (appInitialized) {
+                console.log('App already initialized, skipping...');
+                return;
+            }
+            
+            appInitialized = true;
+            
+            initializeFavorites();
+            setupNavigation();
+            setupEventListeners();
+            setupAffiliateTabs();
+            
+            // Load custom lists
+            customLists = JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_LISTS)) || [];
+            
+            // Load content
+            preloadContent('series');
+            preloadContent('movie');
+            
+            renderFavorites();
+            renderCustomLists();
+            
+            console.log('🎬 Favorsite initialized successfully!');
+            
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        });  // =============================
+        // 📤 EXPORT & SHARE FUNCTIONS
+        // =============================
+
+        function openShareModal() {
+            const modal = document.getElementById("shareModal");
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            
+            if (favorites.length === 0) {
+                showToast("Add some favorites first to share your taste!", 'error');
+                return;
+            }
+            
+            // Simple share content for now
+            const shareHTML = `
+                <div style="padding:20px; text-align:center;">
+                    <h3 style="color:#00b894;">My Favorites Collection</h3>
+                    <p>${favorites.length} items total</p>
+                    <p>Share your favorites with friends!</p>
+                </div>
+            `;
+            
+            document.getElementById("shareContent").innerHTML = shareHTML;
+            modal.classList.add('active');
+            document.getElementById("imagePreview").style.display = "none";
+        }
+
+        function closeShareModal() {
+            document.getElementById("shareModal").classList.remove('active');
+        }
+
+        function shareOnTwitter() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to share!", 'error');
+                return;
+            }
+            
+            const text = `Check out my favorite movies and TV shows on Favorsite!`;
+            const url = window.location.href;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+        }
+
+        function shareOnFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
+        }
+
+        function copyShareText() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to share!", 'error');
+                return;
+            }
+            
+            let text = `🎬 My Favorites on Favorsite:\n\n`;
+            favorites.forEach((fav, index) => {
+                text += `${index + 1}. ${fav.Title} (⭐ ${fav.imdbRating || "N/A"})\n`;
+            });
+            text += `\nView at: ${window.location.href}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Share text copied to clipboard! 📋", 'success');
+            });
+        }
+
+        function exportAsJSON() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to export!", 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(favorites, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", dataUri);
+            link.setAttribute("download", `my-favorites-${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Favorites exported as JSON!', 'success');
+        }
+
+        function exportAsCSV() {
+            const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+            if (favorites.length === 0) {
+                showToast("No favorites to export!", 'error');
+                return;
+            }
+            
+            let csv = "Title,Type,Year,IMDb Rating,Your Rating,Your Notes,IMDb URL\n";
+            
+            favorites.forEach((fav) => {
+                const title = `"${fav.Title.replace(/"/g, '""')}"`;
+                const type = fav.Type === 'series' ? 'TV Series' : 'Movie';
+                const year = fav.Year || '';
+                const rating = fav.imdbRating || 'N/A';
+                const userRating = fav.userRating || '';
+                const userNote = fav.userNote ? `"${fav.userNote.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '';
+                const imdbUrl = getImdbUrl(fav.imdbID);
+                
+                csv += `${title},${type},${year},${rating},${userRating},${userNote},${imdbUrl}\n`;
+            });
+            
+            const dataUri = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(csv);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", dataUri);
+            link.setAttribute("download", `my-favorites-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Favorites exported as CSV!', 'success');
+        }// Create and show export menu
+            const menu = document.createElement('div');
+            menu.style.cssText = `
+                position: absolute;
+                background: #1f1f1f;
+                border: 1px solid #333;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                z-index: 1000;
+                min-width: 200px;
+            `;
+            menu.innerHTML = exportOptions;
+            
+            const rect = this.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 5) + "px";
+            menu.style.left = (rect.left - 50) + "px";
+            
+            document.body.appendChild(menu);
+            
+            // Close menu on click outside
+            setTimeout(() => {
+                const closeMenu = (e) => {
+                    if (!menu.contains(e.target) && e.target !== this) {
+                        document.body.removeChild(menu);
+                        document.removeEventListener("click", closeMenu);
+                    }
+                };
+                document.addEventListener("click", closeMenu);
+            }, 0);
+        
+
+        function closeAllModals() {
+            document.querySelectorAll('.modal.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            currentEditingId = null;
+            currentRatingId = null;
+            currentListId = null;
+        }
+
+
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Favorsite - Track Your Favorite Movies & TV Shows</title>
+<!-- Include html2canvas library -->
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<!-- Your existing styles and scripts here -->
+</head>
+<body>
+<!-- Your existing HTML content here -->
+
+<script>
+  // Your existing JavaScript code (constants, initialization, etc)
+
+  // Helper function to wait for all images to load
+  function waitForImages(images) {
+    return Promise.all(
+      Array.from(images).map((img) => {
+        return new Promise((resolve) => {
+          if (img.complete) {
+            resolve();
+          } else {
+            img.onload = resolve;
+            img.onerror = resolve; // resolve even if error to avoid blocking
+          }
+        });
+      })
+    );
+  }
+
+  // Updated saveFavoriteAsImage with waiting for images
+  function saveFavoriteAsImage(itemId) {
+    const favorites = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+    const item = favorites.find(f => f.imdbID === itemId);
+    if (!item) {
+      showToast("Favorite item not found!", "error");
+      return;
+    }
+
+    const exportContainer = document.createElement('div');
+    exportContainer.style.cssText = `
+      position: fixed; top: -9999px; left: -9999px; width:600px; background:#1a1a1a; color:white; padding:30px; border-radius:20px; font-family:'Segoe UI', sans-serif; box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    `;
+
+    const poster = item.Poster && item.Poster !== "N/A" 
+      ? item.Poster 
+      : (item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series);
+
+    // Generate star rating display
+    const rating = item.userRating || 0;
+    const stars = renderStarPreview(rating);
+    const imdbUrl = getImdbUrl(item.imdbID);
+
+    exportContainer.innerHTML = `
+      <div style="display:flex; gap:25px; margin-bottom:25px;">
+        <img src="${poster}" 
+             style="width:180px; height:270px; object-fit:cover; border-radius:12px; border:3px solid #00b894;"
+             onerror="this.src='${item.Type === "movie" ? FALLBACK_POSTERS.movie : FALLBACK_POSTERS.series}'">
+        <div style="flex:1;">
+          <h1 style="color:#00b894; margin:0 0 10px 0; font-size:2rem; line-height:1.2;">${sanitizeHTML(item.Title)}</h1>
+          <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+            <div style="background:#00b894; color:#121212; padding:5px 12px; border-radius:20px; font-weight:bold;">#${item.rank || 1}</div>
+            <div style="color:#b2bec3;">${item.Year} • ${item.Type === 'series' ? 'TV Series' : 'Movie'}</div>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:5px;">
+              <span style="color:#FFD700; font-size:1.5rem;">${stars}</span>
+              <span style="color:#FFD700; font-weight:bold; font-size:1.2rem;">${rating.toFixed(1)}/10</span>
+            </div>
+            <div style="color:#b2bec3; font-size:0.9rem;">${rating ? 'Your Rating' : 'Not Rated Yet'}</div>
+          </div>
+          <div style="background:rgba(0,184,148,0.1); padding:15px; border-radius:10px; margin-bottom:15px;">
+            <div style="color:#00b894; font-weight:bold; margin-bottom:5px;">⭐ IMDb Rating:</div>
+            <div style="font-size:1.5rem; font-weight:bold;">${item.imdbRating || "N/A"}/10</div>
+          </div>
+          <div style="margin-top:15px;">
+            <a href="${imdbUrl}" target="_blank" style="background:#f5c518; color:#000; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;">
+              🔗 View on IMDb
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(exportContainer);
+
+    // Wait for images to load
+    const imgs = exportContainer.querySelectorAll('img');
+    waitForImages(imgs).then(() => {
+      html2canvas(exportContainer, {
+        backgroundColor: '#1a1a1a',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        document.body.removeChild(exportContainer);
+        const link = document.createElement('a');
+        link.download = `favorsite-favorite-${item.Title.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`"${item.Title}" saved as image! 📸`, "success");
+      }).catch(error => {
+        console.error('Error saving image:', error);
+        document.body.removeChild(exportContainer);
+        showToast('Failed to save image. Please try again.', "error");
+      });
+    });
+  }
+
+  // Updated saveItemAsImage with waiting for images
+  function saveItemAsImage(itemId) {
+    const item = [...preloadShowIDs, ...preloadMovieIDs].find(i => i.id === itemId);
+    if (!item) {
+      showToast("Item not found!", "error");
+      return;
+    }
+
+    const exportContainer = document.createElement('div');
+    exportContainer.style.cssText = `
+      position: fixed; top: -9999px; left: -9999px; width: 600px; background: #1a1a1a; color: white; padding: 30px; border-radius: 20px; font-family: 'Segoe UI', sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    `;
+
+    const type = preloadShowIDs.find(s => s.id === itemId) ? 'TV Series' : 'Movie';
+    const imdbUrl = getImdbUrl(itemId);
+
+    exportContainer.innerHTML = `
+      <div style="text-align:center; margin-bottom:25px;">
+        <div style="font-size:2.5rem; margin-bottom:10px;">${type === 'Movie' ? '🎬' : '📺'}</div>
+        <h1 style="color:#00b894; margin:0; font-size:2.2rem;">${sanitizeHTML(item.title)}</h1>
+        <p style="color:#b2bec3; font-size:1.2rem; margin-top:10px;">${item.year}</p>
+      </div>
+      <div style="display:flex; gap:20px; margin-bottom:25px;">
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:4rem; color:#FFD700; margin-bottom:10px;">⭐ ${item.rating}</div>
+          <div style="color:#b2bec3;">IMDb Rating</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:3rem; color:#00b894; margin-bottom:10px;">${type === 'Movie' ? '🎬' : '📺'}</div>
+          <div style="color:#b2bec3;">${type}</div>
+        </div>
+      </div>
+      <div style="background:rgba(0,184,148,0.1); padding:20px; border-radius:12px; margin-bottom:25px; border-left:4px solid #00b894;">
+        <h3 style="color:#00b894; margin-top:0;">Available on:</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a href="${imdbUrl}" target="_blank" style="background:#f5c518; color:#000; padding:8px 15px; border-radius:6px; font-weight:bold; text-decoration:none;">IMDb</a>
+          <div style="background:#FF9900; color:#232F3E; padding:8px 15px; border-radius:6px; font-weight:bold;">Amazon</div>
+          <div style="background:#00A8E1; color:white; padding:8px 15px; border-radius:6px; font-weight:bold;">Prime Video</div>
+          <div style="background:#FF0000; color:white; padding:8px 15px; border-radius:6px; font-weight:bold;">YouTube Trailers</div>
+        </div>
+      </div>
+      <div style="text-align:center; color:#666; font-size:0.9rem; border-top:2px solid #333; padding-top:20px;">
+        <div style="margin-bottom:5px;">Generated by <span style="color:#00b894; font-weight:bold;">Favorsite</span></div>
+        <div>${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+      </div>
+    `;
+
+    document.body.appendChild(exportContainer);
+
+    // Wait for images
+    const imgs = exportContainer.querySelectorAll('img');
+    waitForImages(imgs).then(() => {
+      html2canvas(exportContainer, {
+        backgroundColor: '#1a1a1a',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true
+      }).then(canvas => {
+        document.body.removeChild(exportContainer);
+        const link = document.createElement('a');
+        link.download = `favorsite-favorite-${item.Title.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`"${item.Title}" saved as image! 📸`, "success");
+      }).catch(error => {
+        console.error('Error saving image:', error);
+        document.body.removeChild(exportContainer);
+        showToast('Failed to save image. Please try again.', "error");
+      });
+    });
+  } <!-- TASTE PROFILE -->
     <section id="tasteProfileSection">
         <h2>📊 Your Taste Profile</h2>
         <div id="tasteProfile">
@@ -206,37 +3863,6 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <p>
-            Made with ❤️ by Bekalu Endale<br>
-            <small>Powered by OMDb API • Data from IMDb</small>
-        </p>
-        <p style="margin-top: 10px; font-size: 0.8rem; color: #666;">
-            TV Show and Movie data © IMDb
-        </p>
-    </footer>
-
-    <!-- LINK TO JAVASCRIPT FILE -->
-    <script src="f97a4fa5.js"></script>
-    
-    <!-- Initialize Ads -->
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-</body><!-- Default Statcounter code for favorsite http://favorsite.netlify.app -->
-<script type="text/javascript">
-var sc_project=13189222; 
-var sc_invisible=1; 
-var sc_security="ed863ba5"; 
 </script>
-<script type="text/javascript"
-src="https://www.statcounter.com/counter/counter.js" async></script>
-<noscript><div class="statcounter"><a title="Web Analytics Made Easy -
-Statcounter" href="https://statcounter.com/" target="_blank"><img
-class="statcounter" src="https://c.statcounter.com/13189222/0/ed863ba5/1/"
-alt="Web Analytics Made Easy - Statcounter"
-referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
-<!-- End of Statcounter Code -->
-<a href="https://statcounter.com/p13189222/?guest=1">View My Stats</a>
-</html>
+</body>
+</html> 
